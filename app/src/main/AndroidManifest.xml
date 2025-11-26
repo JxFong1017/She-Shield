@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Add INTERNET permission for Google Sign-In and any network operations -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,9 +14,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.GrpAssignment">
+
+        <!-- ============================================== -->
+        <!-- NEW LOGIN ACTIVITY: SET AS THE LAUNCHER -->
+        <!-- This activity will start when the user taps the app icon. -->
+        <!-- Ensure your Java file is named LogInPage.java -->
         <activity
-            android:name=".log_in_page"
-            android:exported="false" />
+            android:name=".LogInPage"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- ============================================== -->
+
         <activity
             android:name=".MainActivity4"
             android:exported="false" />
@@ -29,14 +44,17 @@
         <activity
             android:name=".MainActivity5"
             android:exported="true" />
+
+        <!-- The original LAUNCHER activity. It is no longer the starting screen. -->
         <activity
             android:name=".post_report"
             android:exported="true">
+            <!-- Removed LAUNCHER filter here:
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            -->
         </activity>
 
         <meta-data

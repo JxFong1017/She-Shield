@@ -43,4 +43,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    // 1. Google Sign-In (Resolves GoogleSignIn, GoogleSignInClient, etc. errors)
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+// 2. Material Design Components (Resolves TextInputEditText errors)
+    implementation("com.google.android.material:material:1.11.0")
 }

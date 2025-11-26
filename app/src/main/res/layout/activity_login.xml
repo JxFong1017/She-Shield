@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FEFCE8"
+    android:padding="24dp">
+    <!--
+    This file implements the login screen for the "She-Shield" app,
+    featuring standard username/password fields and Google Sign-In.
+    The primary theme color is set to #FEFCE8 (light cream).
+    -->
+
+    <TextView
+        android:id="@+id/TVSignIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:text="Welcome to She-Shield"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/TVSlogan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Your trusted shield for safety and support."
+        android:textSize="16sp"
+        android:textColor="#555555"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TVSignIn" />
+
+    <!-- 1. Username Input Field (Using TextInputLayout for Material Design) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/TIL_username"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TVSlogan">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ET_username"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Username or Email"
+            android:inputType="textEmailAddress" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 2. Password Input Field (Using TextInputLayout for Material Design) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/TIL_password"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
+        app:passwordToggleEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TIL_username">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ET_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 3. Forgot Password Link -->
+    <TextView
+        android:id="@+id/forgotpw"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Forgot password?"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TIL_password" />
+
+    <!-- 4. Primary Login Button -->
+    <Button
+        android:id="@+id/BTlogin"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="SECURE LOGIN"
+        android:textSize="16sp"
+        android:paddingVertical="12dp"
+        android:elevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/forgotpw" />
+
+    <!-- 5. Divider Line -->
+    <View
+        android:id="@+id/divider_line"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="32dp"
+        android:background="#CCCCCC"
+        app:layout_constraintEnd_toStartOf="@+id/TValternative_login"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/BTlogin"
+        app:layout_constraintWidth_percent="0.35" />
+
+    <TextView
+        android:id="@+id/TValternative_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OR"
+        android:textSize="14sp"
+        android:layout_marginHorizontal="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/divider_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/divider_line" />
+
+    <View
+        android:id="@+id/divider_line2"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#CCCCCC"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/TValternative_login"
+        app:layout_constraintTop_toTopOf="@+id/divider_line"
+        app:layout_constraintWidth_percent="0.35" />
+
+    <!-- 6. Google Sign-In Button -->
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/BTGoogleLogin"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TValternative_login" />
+
+    <!-- 7. Signup Prompt -->
+    <TextView
+        android:id="@+id/TVSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="Don't have an account? Sign Up"
+        android:textColor="#555555"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
