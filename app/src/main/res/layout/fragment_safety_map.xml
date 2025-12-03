@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity2">
+    tools:context=".SafetyMapFragment">
 
     <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -1136,78 +1136,7 @@
             </androidx.cardview.widget.CardView>
 
 
-
-
         </LinearLayout>
     </ScrollView>
-
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:layout_width="410dp"-->
-<!--        android:layout_height="500dp"-->
-<!--        android:layout_marginTop="800dp"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent">-->
-
-<!--        <LinearLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:orientation="horizontal">-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/imageView8"-->
-<!--                android:layout_width="45dp"-->
-<!--                android:layout_height="45dp"-->
-<!--                android:layout_marginTop="10dp"-->
-<!--                android:layout_weight="0.1"-->
-<!--                android:clickable="true"-->
-<!--                app:srcCompat="@drawable/screenshot_2025_11_18_160439" />-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/imageView9"-->
-<!--                android:layout_width="43dp"-->
-<!--                android:layout_height="43dp"-->
-<!--                android:layout_marginTop="12dp"-->
-<!--                android:layout_weight="0.1"-->
-<!--                android:clickable="true"-->
-<!--                app:srcCompat="@drawable/screenshot_2025_11_18_160336" />-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/imageView10"-->
-<!--                android:layout_width="45dp"-->
-<!--                android:layout_height="45dp"-->
-<!--                android:layout_marginTop="10dp"-->
-<!--                android:layout_weight="0.1"-->
-<!--                android:clickable="true"-->
-<!--                app:srcCompat="@drawable/screenshot_2025_11_18_160352" />-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/imageView11"-->
-<!--                android:layout_width="45dp"-->
-<!--                android:layout_height="45dp"-->
-<!--                android:layout_marginTop="10dp"-->
-<!--                android:layout_weight="0.1"-->
-<!--                android:clickable="true"-->
-<!--                app:srcCompat="@drawable/screenshot_2025_11_18_160406" />-->
-
-<!--            <ImageView-->
-<!--                android:id="@+id/imageView12"-->
-<!--                android:layout_width="45dp"-->
-<!--                android:layout_height="45dp"-->
-<!--                android:layout_marginTop="10dp"-->
-<!--                android:layout_weight="0.1"-->
-<!--                android:clickable="true"-->
-<!--                app:srcCompat="@drawable/screenshot_2025_11_18_160422" />-->
-<!--        </LinearLayout>-->
-<!--    </androidx.cardview.widget.CardView>-->
-
-    <ImageView
-        android:id="@+id/imageView14"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/screenshot_2025_11_18_151951_removebg_preview" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
