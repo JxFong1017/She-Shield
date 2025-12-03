@@ -14,7 +14,8 @@
         android:id="@+id/nav_map"
         android:name="com.example.grpassignment.SafetyMapFragment"
         android:label="Safety Map"
-        tools:layout="@layout/fragment_safety_map" />
+        tools:layout="@layout/fragment_safety_map" >
+    </fragment>
     <fragment
         android:id="@+id/nav_report"
         android:name="com.example.grpassignment.ReportFragment"
@@ -30,4 +31,9 @@
         android:name="com.example.grpassignment.TrustedContactsFragment"
         android:label="Trusted Contacts"
         tools:layout="@layout/fragment_trusted_contacts" />
+    <fragment
+        android:id="@+id/fullScreenMapFragment"
+        android:name="com.example.grpassignment.FullScreenMapFragment"
+        android:label="Full Screen Map"
+        tools:layout="@layout/fragment_fullscreen_map"/>
 </navigation>
