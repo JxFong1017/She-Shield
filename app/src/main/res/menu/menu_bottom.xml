@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Home"
+        android:id="@+id/nav_home"
+        android:icon="@drawable/screenshot_2025_11_18_160439"
+        />
+
+    <item android:title="Safety Map"
+        android:id="@+id/nav_map"
+        android:icon="@drawable/screenshot_2025_11_18_160336"
+        />
+
+    <item android:title="Report"
+        android:id="@+id/nav_report"
+        android:icon="@drawable/screenshot_2025_11_18_160352"
+        />
+
+    <item android:title="Resources"
+        android:id="@+id/nav_resources"
+        android:icon="@drawable/screenshot_2025_11_18_160406"
+        />
+
+    <item android:title="Contacts"
+        android:id="@+id/nav_contacts"
+        android:icon="@drawable/screenshot_2025_11_18_160422"
+        />
+</menu>
