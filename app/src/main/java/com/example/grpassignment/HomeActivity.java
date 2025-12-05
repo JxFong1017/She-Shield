@@ -27,7 +27,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home);
 
         // 1. Find the toolbar from your activity's layout
@@ -39,26 +38,34 @@ public class HomeActivity extends AppCompatActivity {
                 .findFragmentById(R.id.nav_host_fragment); // Use the ID of your FragmentContainerView
         NavController navController = navHostFragment.getNavController();
 
-        // 3. Find the DrawerLayout
-        DrawerLayout drawerLayout = findViewById(R.id.DLMain);
+//        // 3. Find the DrawerLayout
+//        DrawerLayout drawerLayout = findViewById(R.id.DLMain);
+//
+//        // 4. Create AppBarConfiguration and link it with the DrawerLayout
+//        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph())
+//                .setOpenableLayout(drawerLayout)   // add this to handle drawer correctly
+//                .build();
 
-        // 4. Create AppBarConfiguration and link it with the DrawerLayout
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph())
-                .setOpenableLayout(drawerLayout)   // add this to handle drawer correctly
-                .build();
+        // 3. Connect the BottomNavigationView to the NavController
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav_view);
+        NavigationUI.setupWithNavController(bottomNav, navController);
+
+        // 4. Connect the Toolbar to the NavController
+        // This will automatically update the toolbar title and handle the Up button
+        NavigationUI.setupActionBarWithNavController(this, navController);
 
 
         // 4. Link the NavController to the ActionBar (the Toolbar)
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        //NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
 
 
 
-        // 1. Find the BottomNavigationView by its ID
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav_view);
-
-        // 2. Connect the NavController to the BottomNavigationView
-        NavigationUI.setupWithNavController(bottomNav, navController);
+//        // 1. Find the BottomNavigationView by its ID
+//        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav_view);
+//
+//        // 2. Connect the NavController to the BottomNavigationView
+//        NavigationUI.setupWithNavController(bottomNav, navController);
 
 
         // NEW
@@ -101,11 +108,7 @@ public class HomeActivity extends AppCompatActivity {
     // 5. Handle the "Up" button press
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = NavHostFragment.findNavController(getSupportFragmentManager()
-                .findFragmentById(R.id.nav_home));
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
-
-
+        NavController navController = ((NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment)).getNavController();
+        return navController.navigateUp() || super.onSupportNavigateUp();
     };
 }

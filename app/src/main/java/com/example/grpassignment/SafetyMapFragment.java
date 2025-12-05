@@ -1,29 +1,40 @@
 package com.example.grpassignment;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 public class SafetyMapFragment extends Fragment {
 
     private MapView mapPreview;
     private FrameLayout mapPreviewContainer;
+    private FusedLocationProviderClient fusedLocationClient;
+    private GeoPoint currentUserLocation;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -32,6 +43,8 @@ public class SafetyMapFragment extends Fragment {
         Context ctx = requireContext().getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        // Initialize location client
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
 
     @Nullable
@@ -41,38 +54,92 @@ public class SafetyMapFragment extends Fragment {
 
         mapPreviewContainer = view.findViewById(R.id.map_preview_container);
 
-        // Create a map view programmatically for the preview
         mapPreview = new MapView(requireContext());
-
-        // Disable all user interactions on the preview map
         mapPreview.setClickable(false);
         mapPreview.setMultiTouchControls(false);
         mapPreview.setFlingEnabled(false);
-        mapPreview.setScrollableAreaLimitLatitude(MapView.getTileSystem().getMaxLatitude(), MapView.getTileSystem().getMinLatitude(), 0);
-        mapPreview.setScrollableAreaLimitLongitude(MapView.getTileSystem().getMinLongitude(), MapView.getTileSystem().getMaxLongitude(), 0);
+        mapPreview.getController().setZoom(15.0);
 
-        // Add the preview to its container
         mapPreviewContainer.addView(mapPreview);
 
-        // Set initial camera position for the preview
-        mapPreview.getController().setZoom(14.0);
-        mapPreview.getController().setCenter(new GeoPoint(3.1390, 101.6869)); // Default to KL
-
-
+        // Fetch location to center the preview
+        fetchCurrentLocationAndCenterPreview();
 
         return view;
     }
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        CardView BtnCat = view.findViewById(R.id.filter_all);
-        View.OnClickListener OCLCat = new View.OnClickListener() {
+@Override
+public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
+
+    CardView BtnCat = view.findViewById(R.id.map_preview_parent_container);
+
+    // Listener merged with argument passing
+    View.OnClickListener OCLCat = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            Bundle args = new Bundle();
+
+            // Pass Lat & Lng if exist
+            if (currentUserLocation != null) {
+                args.putDouble("latitude", currentUserLocation.getLatitude());
+                args.putDouble("longitude", currentUserLocation.getLongitude());
+            }
+
+            // Navigate with Safe Arguments
+            Navigation.findNavController(v)
+                    .navigate(R.id.action_nav_map_to_fullScreenMapFragment, args);
+        }
+    };
+
+    BtnCat.setOnClickListener(OCLCat);
+}
+
+
+    /*SAMPLE
+    * ImageButton BtnDog = view.findViewById(R.id.BtnDog);
+        View.OnClickListener OCLDog = new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Navigation.findNavController(view).navigate(R.id.fullScreenMapFragment);
+            public void onClick(View view){
+                Navigation.findNavController(view).navigate(R.id.NextToDog);
             }
         };
-        BtnCat.setOnClickListener(OCLCat);
+        BtnDog.setOnClickListener(OCLDog);
+    * */
+
+    private void fetchCurrentLocationAndCenterPreview() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
+            if (location != null) {
+                currentUserLocation = new GeoPoint(location.getLatitude(), location.getLongitude());
+            } else {
+                // Default to KL if location is unavailable
+                currentUserLocation = new GeoPoint(3.1390, 101.6869);
+            }
+            if (mapPreview != null) {
+                mapPreview.getController().setCenter(currentUserLocation);
+            }
+
+            // Add overlay to show and track current location
+            MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(
+                    new GpsMyLocationProvider(requireContext()), mapPreview);
+            myLocationOverlay.enableMyLocation();
+            myLocationOverlay.enableFollowLocation(); // Auto-center on movement
+            mapPreview.getOverlays().add(myLocationOverlay);
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            fetchCurrentLocationAndCenterPreview();
+        }
     }
 
     @Override
