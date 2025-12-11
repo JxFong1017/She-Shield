@@ -35,6 +35,7 @@ public class FullScreenMapFragment extends Fragment {
     private MyLocationNewOverlay myLocationOverlay;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    // Initialize OSMDroid and Location Client
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,16 +47,19 @@ public class FullScreenMapFragment extends Fragment {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
 
+    // Load the XML Layout containing the map
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_fullscreen_map, container, false);
     }
 
+    // Main logic
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Initialize Map
         map = view.findViewById(R.id.fullscreen_map_view);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setMultiTouchControls(true);

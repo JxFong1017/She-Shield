@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,9 +17,13 @@ import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -27,6 +32,9 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SafetyMapFragment extends Fragment {
 
@@ -94,6 +102,31 @@ public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceStat
     };
 
     BtnCat.setOnClickListener(OCLCat);
+
+    // Card List (Verified Safety Zones Near You)
+    RecyclerView recyclerView = view.findViewById(R.id.recyclerSafetyZones);
+    recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+    SafetyZoneAdapter adapter = new SafetyZoneAdapter();
+    recyclerView.setAdapter(adapter);
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    // Load Safety Zones from Firestore
+    db.collection("safety_zones_pin")
+            .get()
+            .addOnSuccessListener(query -> {
+                List<SafetyZone> zones = new ArrayList<>();
+                for (DocumentSnapshot doc : query) {
+                    SafetyZone z = doc.toObject(SafetyZone.class);
+                    zones.add(z);
+                }
+
+                adapter.setData(zones);
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            });
 }
 
 
