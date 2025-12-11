@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +17,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
@@ -59,22 +62,24 @@ public class FullScreenMapFragment extends Fragment {
         map.getController().setZoom(18.0);
 
         myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(requireContext()), map);
-        myLocationOverlay.enableMyLocation();
         map.getOverlays().add(myLocationOverlay);
 
-        // Check if location was passed from the preview fragment
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            myLocationOverlay.enableMyLocation();
+        } else {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        }
+
         Bundle args = getArguments();
-        if (args != null && args.containsKey("latitude")) {
-            double lat = args.getDouble("latitude");
-            double lon = args.getDouble("longitude");
-            GeoPoint startPoint = new GeoPoint(lat, lon);
+        if (args != null && args.containsKey("latitude") && args.containsKey("longitude")) {
+            GeoPoint startPoint = new GeoPoint(args.getDouble("latitude"), args.getDouble("longitude"));
             map.getController().setCenter(startPoint);
         } else {
-            // Fallback to fetching location if no arguments were passed
             fetchCurrentLocationAndCenterMap();
         }
 
-        addExampleMarker();
+        addSafetyZoneMarkers();
     }
 
     private void fetchCurrentLocationAndCenterMap() {
@@ -93,32 +98,83 @@ public class FullScreenMapFragment extends Fragment {
         }
     }
 
+    private void addSafetyZoneMarkers() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("safety_zones_pin").get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        com.google.firebase.firestore.GeoPoint geoPoint = doc.getGeoPoint("geolocation");
+                        if (geoPoint == null) continue;
+
+                        GeoPoint osmPoint = new GeoPoint(geoPoint.getLatitude(), geoPoint.getLongitude());
+
+                        String name = doc.getString("name");
+                        String type = doc.getString("type");
+                        String phone = doc.getString("phone");
+                        Boolean is24hrObj = doc.getBoolean("is24hour");
+                        boolean is24hr = is24hrObj != null && is24hrObj;
+
+                        Marker marker = new Marker(map);
+                        marker.setPosition(osmPoint);
+                        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+                        // 1. Set a SIMPLE, single-line title. This is safe.
+                        marker.setTitle(name != null ? name : "Unknown");
+
+                        // 2. DO NOT USE setSnippet() with multi-line strings. Store data in a Bundle instead.
+                        Bundle markerData = new Bundle();
+                        markerData.putString("name", name);
+                        markerData.putString("type", type);
+                        markerData.putString("phone", phone);
+                        markerData.putBoolean("is24hr", is24hr);
+                        marker.setRelatedObject(markerData);
+
+                        // 3. Build the complex string inside the click listener.
+                        marker.setOnMarkerClickListener((m, v1) -> {
+                            Bundle data = (Bundle) m.getRelatedObject();
+                            if (data == null) return true;
+
+                            String toastName = data.getString("name", "");
+                            String toastType = data.getString("type", "Unknown Type");
+                            String toastPhone = data.getString("phone", "N/A");
+                            boolean toastIs24hr = data.getBoolean("is24hr", false);
+
+                            String toastMessage = toastName + "\n" +
+                                    "Type: " + toastType + "\n" +
+                                    "Contact: " + toastPhone +
+                                    (toastIs24hr ? "\n🟢 24/7 Support" : "\n🔵 Limited Hours");
+
+                            Toast.makeText(getContext(), toastMessage, Toast.LENGTH_LONG).show();
+                            return true; // Consume the event
+                        });
+
+                        map.getOverlays().add(marker);
+                    }
+                    map.invalidate();
+                })
+                .addOnFailureListener(e -> Toast.makeText(getContext(), "Error fetching Safety Zones: " + e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (myLocationOverlay != null) myLocationOverlay.enableMyLocation();
                 fetchCurrentLocationAndCenterMap();
+            } else {
+                Toast.makeText(getContext(), "Location permission denied", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    private void addExampleMarker() {
-        if (map == null) return;
-        Marker marker = new Marker(map);
-        marker.setPosition(new GeoPoint(3.1450, 101.7110));
-        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        marker.setTitle("Women's Shelter & Support");
-        marker.setSnippet("24/7 Support Available");
-        map.getOverlays().add(marker);
-        map.invalidate();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         if (map != null) map.onResume();
-        if (myLocationOverlay != null) myLocationOverlay.enableMyLocation();
+        if (myLocationOverlay != null && ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            myLocationOverlay.enableMyLocation();
+        }
     }
 
     @Override

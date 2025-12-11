@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "628705667017",
+    "project_id": "wia2007-appvengers",
+    "storage_bucket": "wia2007-appvengers.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:628705667017:android:e2ce1338c047097954aa18",
+        "android_client_info": {
+          "package_name": "com.example.grpassignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgJO7reBui5oTUOnN6MSWEkn7mCpoaN7A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
