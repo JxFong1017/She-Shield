@@ -109,7 +109,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Your privacy is protected. All reports can be made anonymously."
+                            android:text="Your privacy is protected. All reports are made anonymously."
                             android:textColor="#EAB308"
                             android:textSize="12sp"
                             android:textStyle="bold" />
@@ -469,62 +469,12 @@
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
-            <!-- Report Anonymously Toggle -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="340dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="20dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Report Anonymously"
-                            android:textColor="#1F2937"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Your identity will be kept private"
-                            android:textColor="#6B7280"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <!-- Toggle Switch -->
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/switch_anonymous"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:thumbTint="#6B21A8"
-                        android:trackTint="#D8B4FE" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
             <!-- SUBMIT BUTTON -->
             <Button
                 android:id="@+id/btn_submit_report"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginHorizontal="15dp"
                 android:layout_marginBottom="30dp"
                 android:backgroundTint="#6B21A8"

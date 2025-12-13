@@ -1,11 +1,10 @@
 package com.example.grpassignment;
 
-import static android.app.Activity.RESULT_OK;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -14,12 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,6 +40,8 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class ReportFragment extends Fragment {
@@ -54,14 +56,19 @@ public class ReportFragment extends Fragment {
     // Report List
     private RecyclerView recyclerView;
     private ReportAdapter reportAdapter;
-    private List<Report> reportList = new ArrayList<>();
+    private final List<Report> reportList = new ArrayList<>(); // This list will be displayed
+    private final List<Report> allReports = new ArrayList<>(); // Master list from Firestore
+
+    // Filters
+    private CardView filterAll, filterNearest, filterLatest;
+    private String currentFilter = "ALL";
+    private static final double NEARBY_RADIUS_METERS = 10000; // 10km
 
     private FirebaseFirestore db;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // OSM Droid configuration
         Context ctx = requireContext().getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
@@ -75,16 +82,22 @@ public class ReportFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_report, container, false);
 
+        // Initialize Views
         btnConfirmReport = view.findViewById(R.id.btn_confirm_report);
         mapPreview = view.findViewById(R.id.map_view);
         btnZoomIn = view.findViewById(R.id.btn_zoom_in);
         btnZoomOut = view.findViewById(R.id.btn_zoom_out);
         recyclerView = view.findViewById(R.id.recycler_reports);
+        filterAll = view.findViewById(R.id.filter_all);
+        filterNearest = view.findViewById(R.id.filter_shelters);
+        filterLatest = view.findViewById(R.id.filter_legal);
 
+        // Setup components
         setupMap();
         setupZoomControls();
         setupRecyclerView();
-        loadReportsFromFirestore(); // Load reports from Firestore
+        setupFilterListeners();
+        loadReportsFromFirestore();
 
         btnConfirmReport.setOnClickListener(v -> {
             if (selectedLocationMarker != null) {
@@ -98,23 +111,131 @@ public class ReportFragment extends Fragment {
         return view;
     }
 
+    private void setupFilterListeners() {
+        filterAll.setOnClickListener(v -> setFilter("ALL"));
+        filterLatest.setOnClickListener(v -> setFilter("LATEST"));
+        filterNearest.setOnClickListener(v -> setFilter("NEAREST"));
+        updateFilterUI(); // Set initial state
+    }
+
+    private void setFilter(String filter) {
+        currentFilter = filter;
+        updateFilterUI();
+        applyFilters();
+    }
+
+    private void updateFilterUI() {
+        // Reset all backgrounds
+        filterAll.setCardBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+        filterLatest.setCardBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+        filterNearest.setCardBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+
+        // Highlight the selected one
+        switch (currentFilter) {
+            case "ALL":
+                filterAll.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.filter_selected_bg));
+                break;
+            case "LATEST":
+                filterLatest.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.filter_selected_bg));
+                break;
+            case "NEAREST":
+                filterNearest.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.filter_selected_bg));
+                break;
+        }
+    }
+
+    private void applyFilters() {
+        List<Report> filteredList = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+
+        switch (currentFilter) {
+            case "LATEST": // Last 7 days
+                cal.add(Calendar.DAY_OF_YEAR, -7);
+                Date sevenDaysAgo = cal.getTime();
+                for (Report report : allReports) {
+                    if (report.getTimestamp() != null && report.getTimestamp().after(sevenDaysAgo)) {
+                        filteredList.add(report);
+                    }
+                }
+                break;
+
+            case "NEAREST":
+                applyNearestFilter(); // This is async and will update the adapter itself
+                return;
+
+            case "ALL":
+            default: // Default to showing last 30 days
+                cal.add(Calendar.DAY_OF_YEAR, -30);
+                Date thirtyDaysAgo = cal.getTime();
+                for (Report report : allReports) {
+                    if (report.getTimestamp() != null && report.getTimestamp().after(thirtyDaysAgo)) {
+                        filteredList.add(report);
+                    }
+                }
+                break;
+        }
+
+        reportList.clear();
+        reportList.addAll(filteredList);
+        reportAdapter.notifyDataSetChanged();
+    }
+
+    private void applyNearestFilter() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getContext(), "Location permission is needed to find nearby reports", Toast.LENGTH_SHORT).show();
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+            setFilter("ALL"); // Revert to a non-location-based filter
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location == null) {
+                Toast.makeText(getContext(), "Could not get current location. Showing all reports.", Toast.LENGTH_SHORT).show();
+                setFilter("ALL");
+                return;
+            }
+
+            List<Report> nearestReports = new ArrayList<>();
+            for (Report report : allReports) {
+                try {
+                    String[] latLng = report.getLocation().split(",");
+                    double reportLat = Double.parseDouble(latLng[0]);
+                    double reportLng = Double.parseDouble(latLng[1]);
+
+                    float[] results = new float[1];
+                    Location.distanceBetween(location.getLatitude(), location.getLongitude(), reportLat, reportLng, results);
+
+                    if (results[0] < NEARBY_RADIUS_METERS) {
+                        nearestReports.add(report);
+                    }
+                } catch (Exception e) {
+                    Log.e("ReportFragment", "Could not parse report location: " + report.getLocation());
+                }
+            }
+
+            reportList.clear();
+            reportList.addAll(nearestReports);
+            reportAdapter.notifyDataSetChanged();
+        });
+    }
+
     private void loadReportsFromFirestore() {
         db.collection("reports")
-                .orderBy("timestamp", Query.Direction.DESCENDING) // Show newest reports first
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((snapshots, e) -> {
                     if (e != null) {
                         Log.w("ReportFragment", "Listen failed.", e);
                         return;
                     }
 
-                    List<Report> newReports = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : snapshots) {
-                        Report report = doc.toObject(Report.class);
-                        newReports.add(report);
+                    allReports.clear();
+                    if (snapshots != null) {
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            Report report = doc.toObject(Report.class);
+                            allReports.add(report);
+                        }
                     }
-                    reportList.clear();
-                    reportList.addAll(newReports);
-                    reportAdapter.notifyDataSetChanged();
+                    applyFilters(); // Apply the current (default) filter
                 });
     }
 
@@ -129,10 +250,8 @@ public class ReportFragment extends Fragment {
             mapPreview.setMultiTouchControls(true);
             mapPreview.setBuiltInZoomControls(false);
             mapPreview.getController().setZoom(15.0);
-            GeoPoint defaultPoint = new GeoPoint(3.1390, 101.6869);
-            mapPreview.getController().setCenter(defaultPoint);
+            mapPreview.getController().setCenter(new GeoPoint(3.1390, 101.6869));
         }
-
         enableMyLocation();
 
         MapEventsReceiver mReceive = new MapEventsReceiver() {
@@ -144,8 +263,7 @@ public class ReportFragment extends Fragment {
             @Override
             public boolean longPressHelper(GeoPoint p) { return false; }
         };
-        MapEventsOverlay OverlayEvents = new MapEventsOverlay(mReceive);
-        mapPreview.getOverlays().add(OverlayEvents);
+        mapPreview.getOverlays().add(new MapEventsOverlay(mReceive));
     }
 
     private void setupZoomControls() {
@@ -194,7 +312,9 @@ public class ReportFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                enableMyLocation();
+                if ("NEAREST".equals(currentFilter)) {
+                    applyNearestFilter();
+                }
             }
         }
     }

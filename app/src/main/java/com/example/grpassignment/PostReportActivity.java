@@ -23,7 +23,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 
@@ -40,8 +39,11 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class PostReportActivity extends AppCompatActivity {
 
@@ -53,7 +55,6 @@ public class PostReportActivity extends AppCompatActivity {
     private MapView mapPreview;
     private CardView btnUploadEvidence;
     private LinearLayout placeholderUploadLayout;
-    private SwitchCompat switchAnonymous;
 
     // Severity Level Cards
     private CardView cardLow, cardMedium, cardHigh;
@@ -96,7 +97,6 @@ public class PostReportActivity extends AppCompatActivity {
         btnUploadEvidence = findViewById(R.id.btn_upload_evidence);
         imageUploadPreview = findViewById(R.id.image_upload_preview);
         placeholderUploadLayout = findViewById(R.id.placeholder_upload_layout);
-        switchAnonymous = findViewById(R.id.switch_anonymous);
 
         cardLow = findViewById(R.id.severity_low);
         cardMedium = findViewById(R.id.severity_medium);
@@ -364,7 +364,6 @@ public class PostReportActivity extends AppCompatActivity {
         String date = editDate.getText().toString();
         String time = editTime.getText().toString();
         String desc = editDescription.getText().toString();
-        boolean isAnonymous = switchAnonymous.isChecked();
 
         if (date.isEmpty() || time.isEmpty() || desc.isEmpty()) {
             Toast.makeText(this, "Please fill in Date, Time, and Description", Toast.LENGTH_SHORT).show();
@@ -378,7 +377,7 @@ public class PostReportActivity extends AppCompatActivity {
 
         String locationString = selectedLocation.getLatitude() + "," + selectedLocation.getLongitude();
 
-        // Create Report object
+        // --- Create Report object ---
         Report report = new Report();
         report.setType(type);
         report.setDate(date);
@@ -386,8 +385,12 @@ public class PostReportActivity extends AppCompatActivity {
         report.setDescription(desc);
         report.setLocation(locationString);
         report.setSeverity(selectedSeverity);
-        report.setAnonymous(isAnonymous);
-        report.setUserId("test-user-123"); // Placeholder user ID
+        report.setAnonymous(true); // All reports are anonymous
+
+        // --- Assign a random dummy user ID ---
+        List<String> dummyUserIds = Arrays.asList("user-alpha-111", "user-beta-222", "user-gamma-333", "user-delta-444");
+        String randomUserId = dummyUserIds.get(new Random().nextInt(dummyUserIds.size()));
+        report.setUserId(randomUserId);
 
         if (selectedMediaUri != null) {
             report.setMediaUri(selectedMediaUri.toString());

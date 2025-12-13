@@ -1,5 +1,7 @@
 package com.example.grpassignment;
 
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +13,10 @@ import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class ReportDetailActivity extends AppCompatActivity {
 
@@ -45,7 +51,6 @@ public class ReportDetailActivity extends AppCompatActivity {
             incidentType.setText("Incident Type: " + report.getType());
             severity.setText("Severity: " + report.getSeverity());
             dateTime.setText("Date & Time: " + report.getDate() + " " + report.getTime());
-            location.setText("Location: " + report.getLocation());
             description.setText(report.getDescription());
 
             if (report.isAnonymous()) {
@@ -54,7 +59,10 @@ public class ReportDetailActivity extends AppCompatActivity {
                 anonymousStatus.setVisibility(View.GONE);
             }
 
-            // --- More Robust Media Handling ---
+            // --- Handle Location ---
+            setLocationText(location, report.getLocation());
+
+            // --- Handle Media ---
             String mediaUriString = report.getMediaUri();
             if (mediaUriString != null) {
                 try {
@@ -62,7 +70,7 @@ public class ReportDetailActivity extends AppCompatActivity {
                     String mimeType = getContentResolver().getType(mediaUri);
 
                     noMediaText.setVisibility(View.GONE);
-                    
+
                     if (mimeType != null && mimeType.startsWith("video/")) {
                         imageView.setVisibility(View.GONE);
                         videoView.setVisibility(View.VISIBLE);
@@ -70,9 +78,7 @@ public class ReportDetailActivity extends AppCompatActivity {
                         MediaController mediaController = new MediaController(this);
                         mediaController.setAnchorView(videoView);
                         videoView.setMediaController(mediaController);
-                        // Removed auto-start, user can press play on the controller
                     } else {
-                        // Default to image view for image MIME types or if type is unknown
                         videoView.setVisibility(View.GONE);
                         imageView.setVisibility(View.VISIBLE);
                         imageView.setImageURI(mediaUri);
@@ -86,6 +92,36 @@ public class ReportDetailActivity extends AppCompatActivity {
                 noMediaText.setVisibility(View.VISIBLE);
             }
         }
+    }
+
+    private void setLocationText(TextView locationView, String locationString) {
+        if (locationString == null || locationString.isEmpty()) {
+            locationView.setText("Location: Not provided");
+            return;
+        }
+
+        // Geocoding should be done on a background thread in a real app
+        new Thread(() -> {
+            try {
+                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                String[] latLng = locationString.split(",");
+                double latitude = Double.parseDouble(latLng[0]);
+                double longitude = Double.parseDouble(latLng[1]);
+
+                List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+
+                if (addresses != null && !addresses.isEmpty()) {
+                    Address address = addresses.get(0);
+                    String addressLine = address.getAddressLine(0);
+                    runOnUiThread(() -> locationView.setText("Location: " + addressLine));
+                } else {
+                    runOnUiThread(() -> locationView.setText("Location: " + locationString));
+                }
+            } catch (IOException | NumberFormatException | IndexOutOfBoundsException e) {
+                Log.e("ReportDetailActivity", "Error geocoding location", e);
+                runOnUiThread(() -> locationView.setText("Location: " + locationString)); // Fallback
+            }
+        }).start();
     }
 
     @Override
