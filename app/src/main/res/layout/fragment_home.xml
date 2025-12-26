@@ -41,7 +41,7 @@
                     <!-- Emergency text -->
 
                     <TextView
-                        android:id="@+id/textView2"
+                        android:id="@+id/sos_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/archivo_black"
@@ -80,7 +80,7 @@
                                 android:id="@+id/imageView3"
                                 android:layout_width="186dp"
                                 android:layout_height="95dp"
-                                app:srcCompat="@drawable/screenshot_2025_11_18_152053" />
+                                app:srcCompat="@drawable/screenshot_2025_11_18_130845_removebg_preview" />
 
                             <TextView
                                 android:id="@+id/sos_text"
@@ -107,11 +107,12 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/textView2"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/sos_hold_text"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/archivo_black"
                         android:text="Hold for 3 seconds to activate"
+                        android:textAlignment="center"
                         android:textColor="#090909"
                         android:textSize="12dp" />
 
