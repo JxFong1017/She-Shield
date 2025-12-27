@@ -1,8 +1,10 @@
 package com.example.grpassignment;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,14 +25,13 @@ public class HomeFragment extends Fragment {
     private CardView sosButton;
     private TextView sosText;
     private TextView sosHoldText;
-    private Button sharePostButton;
-    private CardView communityReportButton;
-    private CardView safetyMapsButton;
-    private CardView educationHubCard;
-    private TextView viewAllText;
-    private Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable runnable;
     private boolean isSosActive = false;
+
+    private Runnable blinkRunnable;
+    private boolean isBlinking = false;
+
 
     @Nullable
     @Override
@@ -46,85 +47,103 @@ public class HomeFragment extends Fragment {
         sosButton = view.findViewById(R.id.sos_button);
         sosText = view.findViewById(R.id.sos_text);
         sosHoldText = view.findViewById(R.id.sos_hold_text);
-        sharePostButton = view.findViewById(R.id.button6);
-        communityReportButton = view.findViewById(R.id.btn_share_location);
-        safetyMapsButton = view.findViewById(R.id.btn_safety_zones);
-        educationHubCard = view.findViewById(R.id.btn_report);
-        viewAllText = view.findViewById(R.id.tv_view_all);
+        Button sharePostButton = view.findViewById(R.id.button6);
+        CardView communityReportButton = view.findViewById(R.id.btn_share_location);
+        CardView safetyMapsButton = view.findViewById(R.id.btn_safety_zones);
+        CardView educationHubCard = view.findViewById(R.id.btn_report);
+        TextView viewAllText = view.findViewById(R.id.tv_view_all);
 
-        sosButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (isSosActive) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        // Deactivate SOS
-                        isSosActive = false;
-                        sosButton.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.sos_inactive_red)); // Original Red
-                        sosText.setText("PRESS FOR HELP");
-                        sosHoldText.setText("Hold for 3 seconds to activate");
-                        handler.removeCallbacks(runnable); // Cancel any pending activation
-                    }
-                    return true; // Consume the event
-                }
+        sosButton.setOnClickListener(v -> {
+            if (isSosActive) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.sos_deactivate_title)
+                        .setMessage(R.string.sos_deactivate_message)
+                        .setPositiveButton(R.string.sos_deactivate_yes, (dialog, which) -> {
+                            // Deactivate SOS
+                            isSosActive = false;
+                            stopBlinking();
+                            sosButton.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.sos_inactive_red)); // Original Red
+                            sosText.setText(R.string.sos_press_for_help);
+                            sosHoldText.setText(R.string.sos_hold_to_activate);
+                            handler.removeCallbacks(runnable); // Cancel any pending activation
+                        })
+                        .setNegativeButton(R.string.sos_deactivate_no, null)
+                        .show();
+            }
+        });
 
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        // Start a timer for 3 seconds to activate
-                        runnable = new Runnable() {
-                            @Override
-                            public void run() {
-                                // Change color and text after 3 seconds
-                                isSosActive = true;
-                                sosButton.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.sos_active_red)); // Dark Red
-                                sosText.setText("SOS ACTIVE");
-                                sosHoldText.setText("Emergency alerts sent to contacts!" +
-                                        "\nPress again to deactivate");
-                            }
-                        };
-                        handler.postDelayed(runnable, 3000); // 3000 milliseconds = 3 seconds
-                        return true;
-                    case MotionEvent.ACTION_UP:
-                        // Cancel the timer if the touch is released before 3 seconds
-                        handler.removeCallbacks(runnable);
-                        return true;
-                }
+        sosButton.setOnTouchListener((v, event) -> {
+            if (isSosActive) {
+                // Let the OnClickListener handle it by returning false
                 return false;
             }
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    // Start a timer for 3 seconds to activate
+                    runnable = () -> {
+                        // Change color and text after 3 seconds
+                        isSosActive = true;
+                        sosButton.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.sos_active_red)); // Dark Red
+                        sosText.setText(R.string.sos_active);
+                        sosHoldText.setText(R.string.sos_active_message);
+                        startBlinking();
+                    };
+                    handler.postDelayed(runnable, 3000); // 3000 milliseconds = 3 seconds
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    // Cancel the timer if the touch is released before 3 seconds
+                    handler.removeCallbacks(runnable);
+                    v.performClick();
+                    return true;
+            }
+            return false;
         });
 
-        sharePostButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), PostReportActivity.class);
-                startActivity(intent);
-            }
+        sharePostButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), PostReportActivity.class);
+            startActivity(intent);
         });
 
-        communityReportButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.action_nav_home_to_nav_report);
-            }
+        communityReportButton.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_nav_home_to_nav_report);
         });
 
-        safetyMapsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.action_nav_home_to_nav_map);
-            }
+        safetyMapsButton.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_nav_home_to_nav_map);
         });
 
-        View.OnClickListener educationHubClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.action_nav_home_to_nav_resources);
-            }
+        View.OnClickListener educationHubClickListener = v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.action_nav_home_to_nav_resources);
         };
 
         educationHubCard.setOnClickListener(educationHubClickListener);
         viewAllText.setOnClickListener(educationHubClickListener);
+    }
+
+    private void startBlinking() {
+        isBlinking = true;
+        blinkRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isBlinking) {
+                    if (sosButton.getCardBackgroundColor().getDefaultColor() == ContextCompat.getColor(requireContext(), R.color.sos_active_red)) {
+                        sosButton.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.sos_inactive_red));
+                    } else {
+                        sosButton.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.sos_active_red));
+                    }
+                    handler.postDelayed(this, 500); // 500ms interval
+                }
+            }
+        };
+        handler.post(blinkRunnable);
+    }
+
+    private void stopBlinking() {
+        isBlinking = false;
+        handler.removeCallbacks(blinkRunnable);
     }
 }
