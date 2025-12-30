@@ -12,4 +12,10 @@
     <color name="safe_zone_text">#047857</color>
     <color name="unsafe_zone_bg">#FEE2E2</color>
     <color name="unsafe_zone_text">#DC2626</color>
+
+    <!-- Colors for Filter Chips -->
+    <color name="chip_selected_background">#F3E8FF</color>
+    <color name="chip_selected_text">#7C3AED</color>
+    <color name="chip_unselected_text">#7C3AED</color>
+    <color name="purple_700">#673AB7</color>
 </resources>
