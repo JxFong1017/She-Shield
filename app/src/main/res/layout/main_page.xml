@@ -83,7 +83,7 @@
                     <!-- Emergency text -->
 
                     <TextView
-                        android:id="@+id/textView2"
+                        android:id="@+id/sos_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/archivo_black"
@@ -149,7 +149,7 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/textView2"
+                        android:id="@+id/sos_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/archivo_black"

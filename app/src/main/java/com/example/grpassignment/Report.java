@@ -18,6 +18,8 @@ public class Report implements Serializable {
     private boolean isAnonymous;
     private String mediaUri;
     private String userId; // To store the ID of the user who posted
+    private double latitude;
+    private double longitude;
 
     @ServerTimestamp
     private Date timestamp; // For sorting by creation time
@@ -37,6 +39,8 @@ public class Report implements Serializable {
     public String getMediaUri() { return mediaUri; }
     public String getUserId() { return userId; }
     public Date getTimestamp() { return timestamp; }
+    public double getLatitude() { return latitude; }
+    public double getLongitude() { return longitude; }
 
     // --- Setters ---
     public void setDocumentId(String documentId) { this.documentId = documentId; }
@@ -50,4 +54,6 @@ public class Report implements Serializable {
     public void setMediaUri(String mediaUri) { this.mediaUri = mediaUri; }
     public void setUserId(String userId) { this.userId = userId; }
     public void setTimestamp(Date timestamp) { this.timestamp = timestamp; }
+    public void setLatitude(double latitude) { this.latitude = latitude; }
+    public void setLongitude(double longitude) { this.longitude = longitude; }
 }
