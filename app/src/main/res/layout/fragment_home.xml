@@ -41,7 +41,7 @@
                     <!-- Emergency text -->
 
                     <TextView
-                        android:id="@+id/textView2"
+                        android:id="@+id/sos_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/archivo_black"
@@ -80,7 +80,8 @@
                                 android:id="@+id/imageView3"
                                 android:layout_width="186dp"
                                 android:layout_height="95dp"
-                                app:srcCompat="@drawable/screenshot_2025_11_18_152053" />
+                                android:contentDescription="SOS icon"
+                                app:srcCompat="@drawable/screenshot_2025_11_18_130845_removebg_preview" />
 
                             <TextView
                                 android:id="@+id/sos_text"
@@ -107,11 +108,12 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/textView2"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/sos_hold_text"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/archivo_black"
                         android:text="Hold for 3 seconds to activate"
+                        android:textAlignment="center"
                         android:textColor="#090909"
                         android:textSize="12dp" />
 
@@ -131,7 +133,7 @@
                 <androidx.cardview.widget.CardView
                     android:id="@+id/btn_safety_zones"
                     android:layout_width="0dp"
-                    android:layout_height="250dp"
+                    android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:clickable="true"
@@ -141,7 +143,7 @@
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="305dp"
                         android:background="#E8E9ED"
                         android:gravity="center"
                         android:orientation="vertical"
@@ -158,8 +160,9 @@
 
                         <ImageView
                             android:id="@+id/imageView19"
-                            android:layout_width="143dp"
-                            android:layout_height="149dp"
+                            android:layout_width="145dp"
+                            android:layout_height="194dp"
+                            android:contentDescription="Safety map icon"
                             app:srcCompat="@drawable/gemini_generated_image_8vl9fy8vl9fy8vl9" />
 
                         <Button
@@ -175,23 +178,21 @@
 
                 </androidx.cardview.widget.CardView>
 
-                <!-- Share Location Button -->
+                <!-- Community Report Card -->
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/btn_share_location"
+                    android:id="@+id/btn_community_report_card"
                     android:layout_width="0dp"
-                    android:layout_height="250dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:foreground="?android:attr/selectableItemBackground"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="6dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:background="#E8E9ED"
-                        android:gravity="center"
+                        android:gravity="center_horizontal"
                         android:orientation="vertical"
                         android:padding="16dp">
 
@@ -204,32 +205,15 @@
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
-                        <ImageView
-                            android:id="@+id/imageView22"
-                            android:layout_width="wrap_content"
-                            android:layout_height="108dp"
-                            android:layout_marginTop="5dp"
-                            app:srcCompat="@drawable/istockphoto_157393020_612x612" />
-
-                        <TextView
-                            android:id="@+id/textView6"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:text="Share a post near Elm Street:"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:id="@+id/textView7"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="&quot;Felt unsafe here light&quot;"
-                            android:textSize="12sp" />
+                        <include
+                            android:id="@+id/latest_report_card"
+                            layout="@layout/item_community_report" />
 
                         <Button
-                            android:id="@+id/button6"
+                            android:id="@+id/btn_share_post_home"
                             android:layout_width="match_parent"
                             android:layout_height="40dp"
+                            android:layout_marginTop="8dp"
                             android:text="Share Post"
                             android:textSize="12sp" />
 
@@ -264,8 +248,8 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
                             android:gravity="center_vertical"
+                            android:orientation="horizontal"
                             android:paddingBottom="4dp">
 
                             <TextView
@@ -281,14 +265,14 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?android:attr/selectableItemBackground"
                                 android:gravity="end"
                                 android:text="View All"
                                 android:textColor="#6B21A8"
                                 android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:foreground="?android:attr/selectableItemBackground" />
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <androidx.cardview.widget.CardView
@@ -312,6 +296,7 @@
                                     android:layout_marginEnd="8dp"
                                     android:layout_weight="0.3"
                                     android:scaleType="centerCrop"
+                                    android:contentDescription="Workshop image"
                                     app:srcCompat="@drawable/istock_928165466_jpg" />
 
                                 <!-- Details and Button Container (Vertical) -->
@@ -357,11 +342,12 @@
 
             <!-- Safety Status Card -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/safety_status_card"
                 android:layout_width="366dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="0dp"
                 android:layout_marginTop="15dp"
-                app:cardBackgroundColor="#EEFBF2"
+                app:cardBackgroundColor="@color/safe_zone_bg"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp">
 
@@ -372,11 +358,12 @@
                     android:padding="16dp">
 
                     <ImageView
-                        android:id="@+id/imageView7"
+                        android:id="@+id/safety_status_icon"
                         android:layout_width="20dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.2"
-                        app:srcCompat="@drawable/screenshot_2025_11_18_152159" />
+                        android:contentDescription="Safety status icon"
+                        app:srcCompat="@drawable/shield" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -385,19 +372,21 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/safety_status_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="You're in a Safe Zone"
-                            android:textColor="#047857"
+                            android:textColor="@color/safe_zone_text"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/safety_status_subtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:text="Within 500m of verified safe locations"
-                            android:textColor="#059669"
+                            android:textColor="@color/safe_zone_text"
                             android:textSize="13sp" />
 
                     </LinearLayout>

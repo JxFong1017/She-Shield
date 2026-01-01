@@ -1,16 +1,19 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.google.gms.google.services)
+    // Use id() to match your project-level definitions
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
+    // Duplicate line removed here
 }
 
 android {
     namespace = "com.example.grpassignment"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.grpassignment"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -26,6 +29,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -33,32 +37,22 @@ android {
 }
 
 dependencies {
-    // 1. Standard Android Libraries (Keep as is)
+    // 1. Core UI Libraries (Note: if libs.appcompat fails, use "androidx.appcompat:appcompat:1.7.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.cardview)
     implementation(libs.play.services.maps)
-    implementation(libs.play.services.location)
-    implementation(libs.navigation.fragment)
-    implementation(libs.navigation.ui)
-    implementation(libs.recyclerview)
 
-    // 2. IMPORT THE FIREBASE BOM FIRST
-    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
-
-    // 3. ADD FIREBASE LIBRARIES WITHOUT "libs." TO USE BOM VERSIONS
-    // This forces all of them to use versions that work together
+    // 2. Firebase Configuration
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-database")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-common") // Add this to force align common
 
-    // 4. Other Libraries (Keep as is)
+    // 3. Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.3.0")
-    implementation("org.osmdroid:osmdroid-android:6.1.20")
 
+    // 4. Testing Libraries
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

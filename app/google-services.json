@@ -12,7 +12,16 @@
           "package_name": "com.example.grpassignment"
         }
       },
+<<<<<<< HEAD
       "oauth_client": [],
+=======
+      "oauth_client": [
+        {
+          "client_id": "628705667017-01uv7q09av0m0uli8r6l52qqq73o15rv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+>>>>>>> 31f9e94 (set up login)
       "api_key": [
         {
           "current_key": "AIzaSyCgJO7reBui5oTUOnN6MSWEkn7mCpoaN7A"
@@ -20,7 +29,16 @@
       ],
       "services": {
         "appinvite_service": {
+<<<<<<< HEAD
           "other_platform_oauth_client": []
+=======
+          "other_platform_oauth_client": [
+            {
+              "client_id": "628705667017-01uv7q09av0m0uli8r6l52qqq73o15rv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+>>>>>>> 31f9e94 (set up login)
         }
       }
     }

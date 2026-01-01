@@ -5,8 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-
-
     android:backgroundTintMode="src_in"
     android:contextClickable="true"
     android:fadingEdge="none">
@@ -16,35 +14,33 @@
         android:layout_height="wrap_content"
         app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="20dp"
-        android:elevation="4dp"
+        app:cardElevation="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="10dp"
-
-
-            android:elevation="20dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="12dp">
+            android:weightSum="1.0"> 
 
-            <!-- Left side (icon holder if any) -->
+            <!-- Left side (icon) - 20% width -->
             <ImageView
                 android:id="@+id/iconType"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.25" 
+                android:scaleType="centerCrop" 
                 android:src="@android:drawable/ic_menu_mylocation" />
 
-            <!-- Right side -->
+            <!-- Right side (text content) - 80% width -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_weight="0.75" 
+                android:orientation="vertical"
+                android:padding="12dp">
 
                 <TextView
                     android:id="@+id/tvName"

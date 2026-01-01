@@ -6,4 +6,10 @@
     <color name="blue">#3573EE</color>
     <color name="green">#44DC52</color>
     <color name="lightPurple">#F3E8FF</color>
+    <color name="sos_active_red">#BA1D1D</color>
+    <color name="sos_inactive_red">#DA274A</color>
+    <color name="safe_zone_bg">#EEFBF2</color>
+    <color name="safe_zone_text">#047857</color>
+    <color name="unsafe_zone_bg">#FEE2E2</color>
+    <color name="unsafe_zone_text">#DC2626</color>
 </resources>
