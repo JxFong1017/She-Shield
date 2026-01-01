@@ -112,6 +112,7 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
             context.startActivity(browserIntent);
         }
     }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView, iconCard, categoryBadge;
         ImageView iconImageView;
