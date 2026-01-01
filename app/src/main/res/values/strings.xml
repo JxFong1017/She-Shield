@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<<<<<<< HEAD
     <string name="app_name">app_name</string>
     <string name="report_here">Report Here</string>
-=======
-    <string name="app_name">t</string>
     <string name="default_web_client_id">628705667017-01uv7q09av0m0uli8r6l52qqq73o15rv.apps.googleusercontent.com</string>
->>>>>>> 31f9e94 (set up login)
 
     <!-- String array for the Incident Type Spinner -->
     <string-array name="incident_types">
