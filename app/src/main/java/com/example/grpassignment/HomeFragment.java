@@ -31,6 +31,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -225,9 +226,7 @@ public class HomeFragment extends Fragment {
                                 }
 
                                 if (reportImage != null && report.getMediaUri() != null && !report.getMediaUri().isEmpty()) {
-                                    // To load the image, you'll need a library like Glide or Picasso.
-                                    // Add the dependency to your build.gradle, then uncomment the following line:
-                                    // com.bumptech.glide.Glide.with(requireContext()).load(report.getMediaUri()).into(reportImage);
+                                    Glide.with(requireContext()).load(report.getMediaUri()).into(reportImage);
                                 }
                             }
                         }
@@ -239,7 +238,7 @@ public class HomeFragment extends Fragment {
 
     private void fetchLatestSafetyResource(View view) {
         db.collection("safety_resource")
-                .orderBy("timestamp", Query.Direction.DESCENDING) // Assuming a 'timestamp' field for ordering
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .limit(1)
                 .get()
                 .addOnCompleteListener(task -> {
@@ -252,6 +251,7 @@ public class HomeFragment extends Fragment {
                                 TextView titleTextView = resourceCard.findViewById(R.id.titleTextView);
                                 TextView categoryTextView = resourceCard.findViewById(R.id.categoryTextView);
                                 TextView durationTextView = resourceCard.findViewById(R.id.durationTextView);
+                                ImageView resourceImageView = resourceCard.findViewById(R.id.iconImageView);
 
                                 if (titleTextView != null) {
                                     titleTextView.setText(resource.getTitle());
@@ -261,6 +261,9 @@ public class HomeFragment extends Fragment {
                                 }
                                 if (durationTextView != null) {
                                     durationTextView.setText(resource.getDuration());
+                                }
+                                if (resourceImageView != null && resource.getImageUrl() != null && !resource.getImageUrl().isEmpty()) {
+                                    Glide.with(requireContext()).load(resource.getImageUrl()).into(resourceImageView);
                                 }
                             }
                         }

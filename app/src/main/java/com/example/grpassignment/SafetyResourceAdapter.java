@@ -66,7 +66,6 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
             setIconByType(holder.iconImageView, resource.getType());
         }
 
-        setIconCardColor(holder, resource.getType());
         setCategoryColor(holder.categoryBadge, holder.categoryTextView, resource.getCategory());
 
         // Navigate to detail fragment on click
@@ -94,23 +93,6 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
                 break;
             default:
                 imageView.setImageResource(R.drawable.image_removebg_preview__24_);
-                break;
-        }
-    }
-
-    private void setIconCardColor(ViewHolder holder, String type) {
-        switch (type) {
-            case "Video":
-                holder.iconCard.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
-                break;
-            case "Article":
-                holder.iconCard.setCardBackgroundColor(Color.parseColor("#DBEAFE"));
-                break;
-            case "Workshop":
-                holder.iconCard.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
-                break;
-            case "Legal":
-                holder.iconCard.setCardBackgroundColor(Color.parseColor("#DBEAFE"));
                 break;
         }
     }
@@ -175,14 +157,13 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        CardView cardView, iconCard, categoryBadge;
+        CardView cardView, categoryBadge;
         ImageView iconImageView;
         TextView titleTextView, categoryTextView, durationTextView;
 
         ViewHolder(View itemView) {
             super(itemView);
             cardView = (CardView) itemView;
-            iconCard = itemView.findViewById(R.id.iconCard);
             iconImageView = itemView.findViewById(R.id.iconImageView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
             categoryBadge = itemView.findViewById(R.id.categoryBadge);

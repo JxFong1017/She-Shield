@@ -151,7 +151,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:text="Safety Maps"
+                            android:text="Safety Map"
                             android:textColor="#4B2981"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -160,8 +160,8 @@
                             android:id="@+id/map_preview_container"
                             android:layout_width="145dp"
                             android:layout_height="194dp"
-                            android:clickable="true"
-                            android:focusable="true"
+                            android:clickable="false"
+                            android:focusable="false"
                             android:foreground="?android:attr/selectableItemBackground"
                             android:contentDescription="Safety map icon" />
 
@@ -256,7 +256,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Education Hub &amp; Workshops"
-                                android:textColor="#000000"
+                                android.textColor="#000000"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
 
