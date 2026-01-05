@@ -13,12 +13,20 @@ import java.util.List;
 
 public class TrustedContactsAdapter extends RecyclerView.Adapter<TrustedContactsAdapter.ContactViewHolder> {
 
-    private List<TrustedContact> contactList;// Add these two variables to hold the location
+    // Interface for handling clicks on the contact card
+    public interface OnContactClickListener {
+        void onContactClick(TrustedContact contact);
+    }
+
+    private List<TrustedContact> contactList;
     private double currentLat = 0.0;
     private double currentLng = 0.0;
 
-    public TrustedContactsAdapter(List<TrustedContact> contactList) {
+    private OnContactClickListener listener;
+
+    public TrustedContactsAdapter(List<TrustedContact> contactList, OnContactClickListener listener) {
         this.contactList = contactList;
+        this.listener = listener;
     }
 
     // Helper function to update location from Fragment
@@ -49,6 +57,14 @@ public class TrustedContactsAdapter extends RecyclerView.Adapter<TrustedContacts
         }
         holder.phone.setText(contact.getPhone());
 
+        // Handle Card Click for Tracking
+        // allows the user to tap the row to start tracking immediately
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onContactClick(contact);
+            }
+        });
+
         // Handle Share Button Click inside the item
         holder.shareBtn.setOnClickListener(v -> {
             String phoneNumber = contact.getPhone();
@@ -59,11 +75,9 @@ public class TrustedContactsAdapter extends RecyclerView.Adapter<TrustedContacts
                 return;
             }
 
-            // Create the FREE Google Maps link
-            // Format: https://www.google.com/maps/search/?api=1&query=LAT,LNG
             String mapLink = "https://www.google.com/maps/search/?api=1&query=" + currentLat + "," + currentLng;
-
-            String message = "Help! I am using SheShield. My current location is: " + mapLink;
+            String message = "Help! I am using SheShield. My current location is: " + mapLink +
+                    "\n\nTrack me live on SheShield!";
 
             // Send via WhatsApp
             String formattedNumber = phoneNumber.replace("+", "");

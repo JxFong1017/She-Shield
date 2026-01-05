@@ -29,6 +29,8 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
@@ -44,6 +46,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.UUID;
 
 public class PostReportActivity extends AppCompatActivity {
 
@@ -71,6 +74,7 @@ public class PostReportActivity extends AppCompatActivity {
     private Uri selectedMediaUri;
 
     private FirebaseFirestore db;
+    private FirebaseStorage storage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +88,7 @@ public class PostReportActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post_report);
 
         db = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
 
         // --- Initialize Views ---
         spinnerType = findViewById(R.id.spinner_incident_type);
@@ -133,7 +138,7 @@ public class PostReportActivity extends AppCompatActivity {
         setupSeveritySelection();
 
         // --- Setup Submit Button ---
-        btnSubmit.setOnClickListener(v -> submitReportToFirestore());
+        btnSubmit.setOnClickListener(v -> submitReportFlow());
     }
 
     private void handleIncomingIntent() {
@@ -318,7 +323,7 @@ public class PostReportActivity extends AppCompatActivity {
         TimePickerDialog timePickerDialog = new TimePickerDialog(this,
                 (view, hourOfDay, minute1) -> {
                     String amPm = (hourOfDay >= 12) ? "PM" : "AM";
-                    int currentHour = (hourOfDay > 12) ? (hourOfDay - 12) : hourOfDay;
+                    int currentHour = (hourOfDay > 12) ? (hour - 12) : hourOfDay;
                     if (currentHour == 0) currentHour = 12;
 
                     String minuteString = (minute1 < 10) ? "0" + minute1 : String.valueOf(minute1);
@@ -359,7 +364,34 @@ public class PostReportActivity extends AppCompatActivity {
         }
     }
 
-    private void submitReportToFirestore() {
+    private void submitReportFlow() {
+        if (selectedMediaUri != null) {
+            // If there is media, upload it first
+            uploadMediaAndSaveReport();
+        } else {
+            // Otherwise, save the report directly
+            saveReportToFirestore(null);
+        }
+    }
+
+    private void uploadMediaAndSaveReport() {
+        // Create a unique filename
+        String filename = UUID.randomUUID().toString();
+        StorageReference storageRef = storage.getReference().child("reports/" + filename);
+
+        Toast.makeText(this, "Uploading media...", Toast.LENGTH_SHORT).show();
+
+        storageRef.putFile(selectedMediaUri)
+                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String downloadUrl = uri.toString();
+                    saveReportToFirestore(downloadUrl);
+                }))
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Media upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void saveReportToFirestore(@Nullable String mediaUrl) {
         String type = spinnerType.getSelectedItem().toString();
         String date = editDate.getText().toString();
         String time = editTime.getText().toString();
@@ -377,7 +409,7 @@ public class PostReportActivity extends AppCompatActivity {
 
         String locationString = selectedLocation.getLatitude() + "," + selectedLocation.getLongitude();
 
-        // --- Create Report object ---
+        // Create Report object
         Report report = new Report();
         report.setType(type);
         report.setDate(date);
@@ -385,23 +417,20 @@ public class PostReportActivity extends AppCompatActivity {
         report.setDescription(desc);
         report.setLocation(locationString);
         report.setSeverity(selectedSeverity);
-        report.setAnonymous(true); // All reports are anonymous
+        report.setAnonymous(true);
+        report.setMediaUri(mediaUrl);
 
-        // --- Assign a random dummy user ID ---
+        // Assign a random dummy user ID
         List<String> dummyUserIds = Arrays.asList("user-alpha-111", "user-beta-222", "user-gamma-333", "user-delta-444");
         String randomUserId = dummyUserIds.get(new Random().nextInt(dummyUserIds.size()));
         report.setUserId(randomUserId);
-
-        if (selectedMediaUri != null) {
-            report.setMediaUri(selectedMediaUri.toString());
-        }
 
         // Save to Firestore
         db.collection("reports")
                 .add(report)
                 .addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "Report submitted successfully!", Toast.LENGTH_SHORT).show();
-                    finish(); // Go back to the previous screen
+                    finish();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Error submitting report: " + e.getMessage(), Toast.LENGTH_SHORT).show();

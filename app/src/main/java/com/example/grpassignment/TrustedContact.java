@@ -5,14 +5,15 @@ public class TrustedContact {
     private String name;
     private String phone;
     private int rank;
-
+    private String linkedUserId;
     // Empty constructor for Firestore
     public TrustedContact() {}
 
-    public TrustedContact(String name, String phone, int rank) {
+    public TrustedContact(String name, String phone, int rank, String linkedUserId) {
         this.name = name;
         this.phone = phone;
         this.rank = rank;
+        this.linkedUserId = linkedUserId;
     }
 
     public String getId() { return id; }
@@ -23,4 +24,6 @@ public class TrustedContact {
 
     public String getName() { return name; }
     public String getPhone() { return phone; }
+    public String getLinkedUserId() { return linkedUserId; }
+    public void setLinkedUserId(String linkedUserId) { this.linkedUserId = linkedUserId; }
 }
