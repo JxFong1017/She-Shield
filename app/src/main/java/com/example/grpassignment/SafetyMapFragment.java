@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -13,6 +14,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -65,8 +68,17 @@ public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnI
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context ctx = requireContext().getApplicationContext();
+        
+        // Configure OSMDroid with proper cache paths
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        
+        // Set cache path to internal storage to avoid permission issues
+        File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
+        File osmTileCache = new File(osmBasePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
+        
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
 
@@ -168,12 +180,33 @@ public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnI
                     isDataLoaded = true;
                     calculateAndSortDistances();
                 })
-                .addOnFailureListener(e -> Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) return;
+                    String errorMsg = "Error loading safety zones";
+                    if (e.getMessage() != null && e.getMessage().contains("PERMISSION_DENIED")) {
+                        errorMsg = "Database permission denied. Please check Firestore security rules.";
+                    }
+                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show();
+                });
     }
 
     private void fetchCurrentLocationAndCenterPreview() {
+        // Check and request permissions if needed
+        List<String> permissionsNeeded = new ArrayList<>();
+        
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+            permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        
+        // Check storage permission for older Android versions
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+        }
+        
+        if (!permissionsNeeded.isEmpty()) {
+            requestPermissions(permissionsNeeded.toArray(new String[0]), LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
 
@@ -257,8 +290,21 @@ public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnI
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            fetchCurrentLocationAndCenterPreview();
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            boolean locationGranted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION) 
+                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    locationGranted = true;
+                    break;
+                }
+            }
+            
+            if (locationGranted) {
+                fetchCurrentLocationAndCenterPreview();
+            } else {
+                Toast.makeText(requireContext(), "Location permission is required to show your position", Toast.LENGTH_LONG).show();
+            }
         }
     }
 

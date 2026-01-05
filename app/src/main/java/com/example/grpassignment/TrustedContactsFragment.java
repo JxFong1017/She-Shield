@@ -41,6 +41,7 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
 // --- TIMESTAMP IMPORTS ---
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -105,7 +106,16 @@ public class TrustedContactsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Initialize OSM Configuration
+        Context ctx = requireContext().getApplicationContext();
+        Configuration.getInstance().load(ctx, android.preference.PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        
+        // Set cache path to internal storage to avoid permission issues
+        File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
+        File osmTileCache = new File(osmBasePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
+        
         return inflater.inflate(R.layout.fragment_trusted_contacts, container, false);
     }
 

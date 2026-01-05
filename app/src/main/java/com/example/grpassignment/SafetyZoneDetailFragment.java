@@ -28,6 +28,8 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
+import java.io.File;
+
 public class SafetyZoneDetailFragment extends Fragment {
 
     private MapView mapPreview;
@@ -36,8 +38,16 @@ public class SafetyZoneDetailFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context ctx = requireContext().getApplicationContext();
+        
+        // Configure OSMDroid with proper cache paths
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        
+        // Set cache path to internal storage to avoid permission issues
+        File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
+        File osmTileCache = new File(osmBasePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
     }
 
     @Nullable

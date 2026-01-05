@@ -4,11 +4,13 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,55 +57,83 @@ public class SafetyResourcesFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // Firebase initialization
-        db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setPersistenceEnabled(false)
-                .build();
-        db.setFirestoreSettings(settings);
+        try {
+            // Firebase initialization
+            db = FirebaseFirestore.getInstance();
+            FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                    .setPersistenceEnabled(false)
+                    .build();
+            db.setFirestoreSettings(settings);
 
-        // Inflate the layout - use the existing safety_resources.xml
-        View view = inflater.inflate(R.layout.safety_resources, container, false);
+            // Inflate the layout - use the existing safety_resources.xml
+            View view = inflater.inflate(R.layout.safety_resources, container, false);
 
-        // Initialize UI components
-        initializeViews(view);
+            // Initialize UI components
+            initializeViews(view);
 
-        // Initialize lists
-        resourceList = new ArrayList<>();
-        upcomingWorkshops = new ArrayList<>();
+            // Initialize lists
+            resourceList = new ArrayList<>();
+            upcomingWorkshops = new ArrayList<>();
 
-        // Setup components
-        setupRecyclerView();
-        setupFilterChips();
-        setupWorkshopRotation();
-        loadResources();
+            // Setup components
+            setupRecyclerView();
+            setupFilterChips();
+            setupWorkshopRotation();
+            loadResources();
 
-        return view;
+            return view;
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onCreateView: " + e.getMessage(), e);
+            if (isAdded()) {
+                Toast.makeText(requireContext(), "Error loading resources page", Toast.LENGTH_SHORT).show();
+            }
+            // Return a simple error view
+            View errorView = inflater.inflate(android.R.layout.simple_list_item_1, container, false);
+            return errorView;
+        }
     }
 
     private void initializeViews(View view) {
-        recyclerView = view.findViewById(R.id.resourcesRecyclerView);
-        progressBar = view.findViewById(R.id.progressBar);
-        emptyTextView = view.findViewById(R.id.emptyTextView);
+        if (view == null) {
+            Log.e(TAG, "View is null in initializeViews");
+            return;
+        }
+        
+        try {
+            recyclerView = view.findViewById(R.id.resourcesRecyclerView);
+            progressBar = view.findViewById(R.id.progressBar);
+            emptyTextView = view.findViewById(R.id.emptyTextView);
 
-        filterAll = view.findViewById(R.id.filter_all);
-        filterVideos = view.findViewById(R.id.filter_shelters);
-        filterArticles = view.findViewById(R.id.filter_articles);
-        filterWorkshops = view.findViewById(R.id.filter_workshop);
-        filterLegal = view.findViewById(R.id.filter_legal);
+            filterAll = view.findViewById(R.id.filter_all);
+            filterVideos = view.findViewById(R.id.filter_shelters);
+            filterArticles = view.findViewById(R.id.filter_articles);
+            filterWorkshops = view.findViewById(R.id.filter_workshop);
+            filterLegal = view.findViewById(R.id.filter_legal);
 
-        // Hero workshop views
-        nextWorkshopTitle = view.findViewById(R.id.nextWorkshopTitle);
-        nextWorkshopDescription = view.findViewById(R.id.nextWorkshopDescription);
-        nextWorkshopDate = view.findViewById(R.id.nextWorkshopDate);
-        nextWorkshopTime = view.findViewById(R.id.nextWorkshopTime);
-        nextWorkshopLocation = view.findViewById(R.id.nextWorkshopLocation);
-        nextWorkshopCapacity = view.findViewById(R.id.nextWorkshopCapacity);
-        workshopIndicator = view.findViewById(R.id.workshopIndicator);
-        registerWorkshopCard = view.findViewById(R.id.registerWorkshopCard);
+            // Hero workshop views
+            nextWorkshopTitle = view.findViewById(R.id.nextWorkshopTitle);
+            nextWorkshopDescription = view.findViewById(R.id.nextWorkshopDescription);
+            nextWorkshopDate = view.findViewById(R.id.nextWorkshopDate);
+            nextWorkshopTime = view.findViewById(R.id.nextWorkshopTime);
+            nextWorkshopLocation = view.findViewById(R.id.nextWorkshopLocation);
+            nextWorkshopCapacity = view.findViewById(R.id.nextWorkshopCapacity);
+            workshopIndicator = view.findViewById(R.id.workshopIndicator);
+            registerWorkshopCard = view.findViewById(R.id.registerWorkshopCard);
+            
+            // Log missing views
+            if (recyclerView == null) Log.e(TAG, "recyclerView is null");
+            if (progressBar == null) Log.e(TAG, "progressBar is null");
+            if (emptyTextView == null) Log.e(TAG, "emptyTextView is null");
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing views: " + e.getMessage(), e);
+        }
     }
 
     private void setupRecyclerView() {
+        if (recyclerView == null || getContext() == null) {
+            Log.e(TAG, "Cannot setup RecyclerView - view or context is null");
+            return;
+        }
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new SafetyResourceAdapter(getContext(), resourceList);
         recyclerView.setAdapter(adapter);
@@ -133,30 +163,42 @@ public class SafetyResourcesFragment extends Fragment {
 
     private void displayWorkshop(int index) {
         if (upcomingWorkshops == null || upcomingWorkshops.isEmpty() || index >= upcomingWorkshops.size()) {
+            Log.d(TAG, "No workshops to display");
+            return;
+        }
+        
+        if (nextWorkshopTitle == null || nextWorkshopDescription == null) {
+            Log.e(TAG, "Workshop views are null");
             return;
         }
 
-        SafetyResource workshop = upcomingWorkshops.get(index);
+        try {
+            SafetyResource workshop = upcomingWorkshops.get(index);
 
-        nextWorkshopTitle.setText(workshop.getTitle());
-        nextWorkshopDescription.setText(workshop.getDescription());
-        nextWorkshopDate.setText(workshop.getEventDate() != null ? workshop.getEventDate() : "TBA");
-        nextWorkshopTime.setText(workshop.getEventTime() != null ? workshop.getEventTime() : "TBA");
-        nextWorkshopLocation.setText(workshop.getLocation() != null ? workshop.getLocation() : "Online");
-        nextWorkshopCapacity.setText(workshop.getCapacity() + " seats");
-        workshopIndicator.setText((index + 1) + "/" + upcomingWorkshops.size());
+            nextWorkshopTitle.setText(workshop.getTitle() != null ? workshop.getTitle() : "Untitled");
+            nextWorkshopDescription.setText(workshop.getDescription() != null ? workshop.getDescription() : "");
+            if (nextWorkshopDate != null) nextWorkshopDate.setText(workshop.getEventDate() != null ? workshop.getEventDate() : "TBA");
+            if (nextWorkshopTime != null) nextWorkshopTime.setText(workshop.getEventTime() != null ? workshop.getEventTime() : "TBA");
+            if (nextWorkshopLocation != null) nextWorkshopLocation.setText(workshop.getLocation() != null ? workshop.getLocation() : "Online");
+            if (nextWorkshopCapacity != null) nextWorkshopCapacity.setText(workshop.getCapacity() + " seats");
+            if (workshopIndicator != null) workshopIndicator.setText((index + 1) + "/" + upcomingWorkshops.size());
 
-        registerWorkshopCard.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), RegistrationActivity.class);
-            intent.putExtra("RESOURCE_TITLE", workshop.getTitle());
-            intent.putExtra("EVENT_DATE", workshop.getEventDate());
-            intent.putExtra("EVENT_TIME", workshop.getEventTime());
-            intent.putExtra("LOCATION", workshop.getLocation());
-            intent.putExtra("INSTRUCTOR", workshop.getInstructor());
-            intent.putExtra("CAPACITY", workshop.getCapacity());
-            intent.putExtra("DESCRIPTION", workshop.getDescription());
-            startActivity(intent);
-        });
+            if (registerWorkshopCard != null && getActivity() != null) {
+                registerWorkshopCard.setOnClickListener(v -> {
+                    Intent intent = new Intent(getActivity(), RegistrationActivity.class);
+                    intent.putExtra("RESOURCE_TITLE", workshop.getTitle());
+                    intent.putExtra("EVENT_DATE", workshop.getEventDate());
+                    intent.putExtra("EVENT_TIME", workshop.getEventTime());
+                    intent.putExtra("LOCATION", workshop.getLocation());
+                    intent.putExtra("INSTRUCTOR", workshop.getInstructor());
+                    intent.putExtra("CAPACITY", workshop.getCapacity());
+                    intent.putExtra("DESCRIPTION", workshop.getDescription());
+                    startActivity(intent);
+                });
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error displaying workshop: " + e.getMessage(), e);
+        }
     }
 
     private void applyFilter(String filterType, CardView selectedCard) {
@@ -180,50 +222,78 @@ public class SafetyResourcesFragment extends Fragment {
     }
 
     private void loadResources() {
-        progressBar.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-        emptyTextView.setVisibility(View.GONE);
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+        if (recyclerView != null) recyclerView.setVisibility(View.GONE);
+        if (emptyTextView != null) emptyTextView.setVisibility(View.GONE);
 
+        Log.d(TAG, "Loading safety resources from Firestore...");
+        
         db.collection("safety_resource")
                 .get(Source.SERVER)
                 .addOnCompleteListener(task -> {
-                    if (isAdded()) {
-                        progressBar.setVisibility(View.GONE);
+                    if (!isAdded()) return;
+                    
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
 
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            resourceList.clear();
-                            upcomingWorkshops.clear();
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        Log.d(TAG, "Successfully loaded " + task.getResult().size() + " resources");
+                        resourceList.clear();
+                        upcomingWorkshops.clear();
 
-                            for (QueryDocumentSnapshot document : task.getResult()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            try {
                                 SafetyResource resource = document.toObject(SafetyResource.class);
-                                resource.setId(document.getId());
-                                resourceList.add(resource);
+                                if (resource != null) {
+                                    resource.setId(document.getId());
+                                    resourceList.add(resource);
 
-                                if ("Workshop".equals(resource.getType())) {
-                                    upcomingWorkshops.add(resource);
+                                    if ("Workshop".equals(resource.getType())) {
+                                        upcomingWorkshops.add(resource);
+                                    }
                                 }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing resource document: " + e.getMessage(), e);
                             }
+                        }
 
-                            Collections.sort(upcomingWorkshops, (w1, w2) -> {
-                                if (w1.getEventTimestamp() != null && w2.getEventTimestamp() != null) {
-                                    return w1.getEventTimestamp().compareTo(w2.getEventTimestamp());
-                                }
-                                return 0;
-                            });
-
-                            if (upcomingWorkshops.size() > 3) {
-                                upcomingWorkshops = upcomingWorkshops.subList(0, 3);
+                        Collections.sort(upcomingWorkshops, (w1, w2) -> {
+                            if (w1.getEventTimestamp() != null && w2.getEventTimestamp() != null) {
+                                return w1.getEventTimestamp().compareTo(w2.getEventTimestamp());
                             }
+                            return 0;
+                        });
 
+                        if (upcomingWorkshops.size() > 3) {
+                            upcomingWorkshops = upcomingWorkshops.subList(0, 3);
+                        }
+
+                        if (adapter != null) {
                             adapter.updateList(resourceList);
                             adapter.filterByType("All");
+                        }
 
-                            if (!upcomingWorkshops.isEmpty()) {
-                                displayWorkshop(0);
-                                workshopHandler.postDelayed(workshopRunnable, 5000);
+                        if (!upcomingWorkshops.isEmpty() && workshopHandler != null && workshopRunnable != null) {
+                            displayWorkshop(0);
+                            workshopHandler.postDelayed(workshopRunnable, 5000);
+                        }
+
+                        updateEmptyView();
+                    } else {
+                        // Handle error
+                        String errorMsg = "Error loading resources";
+                        if (task.getException() != null) {
+                            Log.e(TAG, "Firestore error: " + task.getException().getMessage(), task.getException());
+                            if (task.getException().getMessage() != null && 
+                                task.getException().getMessage().contains("PERMISSION_DENIED")) {
+                                errorMsg = "Database permission denied. Please check Firestore security rules for 'safety_resource' collection.";
                             }
-
-                            updateEmptyView();
+                        }
+                        if (isAdded()) {
+                            Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show();
+                        }
+                        if (emptyTextView != null) {
+                            emptyTextView.setVisibility(View.VISIBLE);
+                            emptyTextView.setText(errorMsg);
                         }
                     }
                 });

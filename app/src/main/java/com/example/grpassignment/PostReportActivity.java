@@ -41,6 +41,7 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -84,6 +85,12 @@ public class PostReportActivity extends AppCompatActivity {
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(getPackageName());
+        
+        // Set cache path to internal storage to avoid permission issues
+        File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
+        File osmTileCache = new File(osmBasePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
 
         setContentView(R.layout.activity_post_report);
 

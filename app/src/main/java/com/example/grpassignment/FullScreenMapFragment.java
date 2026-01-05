@@ -3,6 +3,7 @@ package com.example.grpassignment;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -18,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
@@ -36,6 +38,10 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 public class FullScreenMapFragment extends Fragment {
 
     private static final String TAG = "FullScreenMapFragment";
@@ -43,13 +49,23 @@ public class FullScreenMapFragment extends Fragment {
     private FusedLocationProviderClient fusedLocationClient;
     private MyLocationNewOverlay myLocationOverlay;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int STORAGE_PERMISSION_REQUEST_CODE = 2;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context ctx = requireContext().getApplicationContext();
+        
+        // Configure OSMDroid with proper cache paths
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        
+        // Set cache path to internal storage to avoid permission issues
+        File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
+        File osmTileCache = new File(osmBasePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
+        
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
     }
 
@@ -71,11 +87,13 @@ public class FullScreenMapFragment extends Fragment {
         myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(requireContext()), map);
         map.getOverlays().add(myLocationOverlay);
 
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+        // Enable location if permission is already granted
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             myLocationOverlay.enableMyLocation();
         } else {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+            // Request permission if not granted
+            checkAndRequestPermissions();
         }
 
         Bundle args = getArguments();
@@ -89,12 +107,41 @@ public class FullScreenMapFragment extends Fragment {
         addSafetyZoneMarkers();
     }
 
+    private void checkAndRequestPermissions() {
+        List<String> permissionsNeeded = new ArrayList<>();
+        
+        // Check location permission
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        } else {
+            // Enable location if already granted
+            if (myLocationOverlay != null) {
+                myLocationOverlay.enableMyLocation();
+            }
+        }
+        
+        // Check storage permission for older Android versions
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) { // Android 12L and below
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+        }
+        
+        // Request all needed permissions at once
+        if (!permissionsNeeded.isEmpty()) {
+            requestPermissions(permissionsNeeded.toArray(new String[0]), LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+
     private void addSafetyZoneMarkers() {
         if (FirebaseApp.getApps(requireContext()).isEmpty()) {
             Log.e(TAG, "Firebase was not initialized. Forcing initialization now.");
             FirebaseApp.initializeApp(requireContext());
         }
 
+        Log.d(TAG, "Fetching safety zones from Firestore...");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("safety_zones_pin").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -124,10 +171,21 @@ public class FullScreenMapFragment extends Fragment {
                         }
                     }
                     map.invalidate();
+                    Log.d(TAG, "Successfully loaded " + queryDocumentSnapshots.size() + " safety zones");
                 })
                 .addOnFailureListener(e -> {
+                    Log.e(TAG, "Firestore error: " + e.getMessage(), e);
                     if (isAdded()) {
-                        Toast.makeText(getContext(), "Error fetching Safety Zones: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        String errorMsg = "Error loading safety zones";
+                        if (e.getMessage() != null) {
+                            if (e.getMessage().contains("PERMISSION_DENIED")) {
+                                errorMsg = "Database permission denied. Please check Firestore security rules.";
+                                Log.e(TAG, "FIRESTORE PERMISSION DENIED - Check Firebase Console security rules");
+                            } else {
+                                errorMsg = "Error: " + e.getMessage();
+                            }
+                        }
+                        Toast.makeText(getContext(), errorMsg, Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -197,9 +255,22 @@ public class FullScreenMapFragment extends Fragment {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (myLocationOverlay != null) myLocationOverlay.enableMyLocation();
-            fetchCurrentLocationAndCenterMap();
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            boolean locationGranted = false;
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION) 
+                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    locationGranted = true;
+                    break;
+                }
+            }
+            
+            if (locationGranted) {
+                if (myLocationOverlay != null) myLocationOverlay.enableMyLocation();
+                fetchCurrentLocationAndCenterMap();
+            } else {
+                Toast.makeText(requireContext(), "Location permission is required to show your position on the map", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
