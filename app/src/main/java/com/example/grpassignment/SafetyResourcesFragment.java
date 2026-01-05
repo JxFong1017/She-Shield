@@ -60,13 +60,10 @@ public class SafetyResourcesFragment extends Fragment {
         try {
             // Firebase initialization
             db = FirebaseFirestore.getInstance();
-            FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                    .setPersistenceEnabled(false)
-                    .build();
-            db.setFirestoreSettings(settings);
-
+            
             // Inflate the layout - use the existing safety_resources.xml
             View view = inflater.inflate(R.layout.safety_resources, container, false);
+            Log.d(TAG, "Layout inflated successfully");
 
             // Initialize UI components
             initializeViews(view);
@@ -81,14 +78,19 @@ public class SafetyResourcesFragment extends Fragment {
             setupWorkshopRotation();
             loadResources();
 
+            Log.d(TAG, "onCreateView completed successfully");
             return view;
         } catch (Exception e) {
-            Log.e(TAG, "Error in onCreateView: " + e.getMessage(), e);
-            if (isAdded()) {
-                Toast.makeText(requireContext(), "Error loading resources page", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "CRITICAL ERROR in onCreateView: " + e.getMessage(), e);
+            e.printStackTrace();
+            if (isAdded() && getContext() != null) {
+                Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
-            // Return a simple error view
-            View errorView = inflater.inflate(android.R.layout.simple_list_item_1, container, false);
+            // Create a simple text view showing the error
+            TextView errorView = new TextView(requireContext());
+            errorView.setText("Error loading resources:\n" + e.getMessage() + "\n\nPlease check Firestore permissions for 'safety_resource' collection");
+            errorView.setPadding(32, 32, 32, 32);
+            errorView.setTextSize(16);
             return errorView;
         }
     }

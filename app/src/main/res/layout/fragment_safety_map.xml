@@ -72,7 +72,7 @@
                     android:layout_height="32dp"
                     android:layout_gravity="bottom|end"
                     android:layout_margin="8dp"
-                    android:src="@android:drawable/gallery_thumb"
+                    android:src="@drawable/open_in_full"
                     app:tint="#100F0F" />
 
             </androidx.cardview.widget.CardView>

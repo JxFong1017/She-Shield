@@ -72,7 +72,14 @@ public class SafetyResource implements Parcelable {
         file = in.readString();
         imageUrl = in.readString();
         description = in.readString();
-        eventTimestamp = in.readParcelable(Timestamp.class.getClassLoader());
+        
+        // Read Timestamp as seconds and nanoseconds
+        long seconds = in.readLong();
+        int nanoseconds = in.readInt();
+        if (seconds != -1) {
+            eventTimestamp = new Timestamp(seconds, nanoseconds);
+        }
+        
         eventDate = in.readString();
         eventTime = in.readString();
         location = in.readString();
@@ -91,7 +98,16 @@ public class SafetyResource implements Parcelable {
         dest.writeString(file);
         dest.writeString(imageUrl);
         dest.writeString(description);
-        dest.writeParcelable(eventTimestamp, flags);
+        
+        // Write Timestamp as seconds and nanoseconds
+        if (eventTimestamp != null) {
+            dest.writeLong(eventTimestamp.getSeconds());
+            dest.writeInt(eventTimestamp.getNanoseconds());
+        } else {
+            dest.writeLong(-1);
+            dest.writeInt(0);
+        }
+        
         dest.writeString(eventDate);
         dest.writeString(eventTime);
         dest.writeString(location);

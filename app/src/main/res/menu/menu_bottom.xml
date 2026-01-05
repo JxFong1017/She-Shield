@@ -3,26 +3,26 @@
 
     <item android:title="Home"
         android:id="@+id/nav_home"
-        android:icon="@drawable/screenshot_2025_11_18_160439"
+        android:icon="@drawable/nav_home"
         />
 
     <item android:title="Safety Map"
         android:id="@+id/nav_map"
-        android:icon="@drawable/screenshot_2025_11_18_160336"
+        android:icon="@drawable/nav_map"
         />
 
     <item android:title="Report"
         android:id="@+id/nav_report"
-        android:icon="@drawable/screenshot_2025_11_18_160352"
+        android:icon="@drawable/nav_report"
         />
 
     <item android:title="Resources"
         android:id="@+id/nav_resources"
-        android:icon="@drawable/screenshot_2025_11_18_160406"
+        android:icon="@drawable/nav_resource"
         />
 
     <item android:title="Contacts"
         android:id="@+id/nav_contacts"
-        android:icon="@drawable/screenshot_2025_11_18_160422"
+        android:icon="@drawable/nav_contact"
         />
 </menu>

@@ -9,11 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-import androidx.fragment.app.FragmentActivity;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -68,8 +68,23 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
 
         setCategoryColor(holder.categoryBadge, holder.categoryTextView, resource.getCategory());
 
-        // Navigate to detail fragment on click
-        holder.cardView.setOnClickListener(v -> openResourceDetail(resource));
+        // Navigate to detail fragment on click using Navigation Component
+        holder.cardView.setOnClickListener(v -> {
+            try {
+                // Create bundle with resource data
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("safetyResource", resource);
+                
+                // Use Navigation Component to navigate
+                Navigation.findNavController(v).navigate(
+                    R.id.action_nav_resources_to_safetyResourceDetail, 
+                    bundle
+                );
+            } catch (Exception e) {
+                Log.e("SafetyResourceAdapter", "Navigation error: " + e.getMessage(), e);
+                Toast.makeText(context, "Error opening details", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -101,35 +116,6 @@ public class SafetyResourceAdapter extends RecyclerView.Adapter<SafetyResourceAd
         badgeCard.setCardBackgroundColor(Color.parseColor("#D1FAE5"));
         badgeText.setTextColor(Color.parseColor("#047857"));
         badgeText.setText(category);
-    }
-
-    private void openResourceDetail(SafetyResource resource) {
-        try {
-            // Create bundle with resource data
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("safetyResource", resource);
-
-            // Create and show detail fragment
-            SafetyResourceDetailFragment detailFragment = new SafetyResourceDetailFragment();
-            detailFragment.setArguments(bundle);
-
-            // Navigate to detail fragment
-            if (context instanceof FragmentActivity) {
-                ((FragmentActivity) context).getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, detailFragment)
-                        .addToBackStack(null)
-                        .commit();
-            } else if (context instanceof AppCompatActivity) {
-                ((AppCompatActivity) context).getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, detailFragment)
-                        .addToBackStack(null)
-                        .commit();
-            }
-        } catch (Exception e) {
-            Log.e("SafetyResourceAdapter", "Error opening detail: " + e.getMessage());
-        }
     }
 
     public void updateList(List<SafetyResource> newList) {

@@ -41,7 +41,11 @@
         android:id="@+id/nav_resources"
         android:name="com.example.grpassignment.SafetyResourcesFragment"
         android:label="Safety Resources"
-        tools:layout="@layout/fragment_safety_resources" />
+        tools:layout="@layout/fragment_safety_resources" >
+        <action
+            android:id="@+id/action_nav_resources_to_safetyResourceDetail"
+            app:destination="@id/safetyResourceDetailFragment" />
+    </fragment>
     <fragment
         android:id="@+id/nav_contacts"
         android:name="com.example.grpassignment.TrustedContactsFragment"
@@ -67,5 +71,15 @@
         <action
             android:id="@+id/action_safetyZoneDetail_to_fullScreenMap"
             app:destination="@id/fullScreenMapFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/safetyResourceDetailFragment"
+        android:name="com.example.grpassignment.SafetyResourceDetailFragment"
+        android:label="Resource Details"
+        tools:layout="@layout/fragment_safety_resource_detail">
+        <argument
+            android:name="safetyResource"
+            app:argType="com.example.grpassignment.SafetyResource" />
     </fragment>
 </navigation>
