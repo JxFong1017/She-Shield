@@ -57,22 +57,23 @@
                 <!-- Link to Map Fragment-->
                 <FrameLayout
                     android:id="@+id/map_preview_container"
-                    android:layout_width="244dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:clickable="true"
                     android:focusable="true">
 
                     <!-- A clickable icon to indicate fullscreen -->
-                    <ImageView
-                        android:id="@+id/zoom_in_map"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="bottom|end"
-                        android:layout_margin="8dp"
-                        android:src="@android:drawable/gallery_thumb"
-                        app:tint="#100F0F" />
 
                 </FrameLayout>
+
+                <ImageView
+                    android:id="@+id/zoom_in_map"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="8dp"
+                    android:src="@android:drawable/gallery_thumb"
+                    app:tint="#100F0F" />
 
             </androidx.cardview.widget.CardView>
 

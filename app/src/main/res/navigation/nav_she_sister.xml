@@ -10,7 +10,6 @@
         android:name="com.example.grpassignment.HomeFragment"
         android:label="She-Shield"
         tools:layout="@layout/fragment_home" >
-        <!-- Actions to navigate from Home to other main screens -->
         <action
             android:id="@+id/action_nav_home_to_nav_report"
             app:destination="@id/nav_report" />
@@ -53,12 +52,20 @@
         android:id="@+id/fullScreenMapFragment"
         android:name="com.example.grpassignment.FullScreenMapFragment"
         android:label="Fullscreen Map"
-        tools:layout="@layout/fragment_fullscreen_map" />
+        tools:layout="@layout/fragment_fullscreen_map" >
+        <action
+            android:id="@+id/action_fullScreenMap_to_safetyZoneDetailFragment"
+            app:destination="@id/safetyZoneDetailFragment" />
+    </fragment>
 
-    <!-- New Destination for the Detail Page -->
     <fragment
         android:id="@+id/safetyZoneDetailFragment"
         android:name="com.example.grpassignment.SafetyZoneDetailFragment"
         android:label="Safety Zone Details"
-        tools:layout="@layout/fragment_safety_zone_detail" />
+        tools:layout="@layout/fragment_safety_zone_detail" >
+        <!-- Action from the detail page back to the full screen map -->
+        <action
+            android:id="@+id/action_safetyZoneDetail_to_fullScreenMap"
+            app:destination="@id/fullScreenMapFragment" />
+    </fragment>
 </navigation>
