@@ -17,6 +17,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 /**
  * Handles new user registration for the She-Shield application.
@@ -27,21 +28,23 @@ public class SignUpActivity extends AppCompatActivity {
     private static final String TAG = "SignUpActivity";
 
     // UI Elements
-    private TextInputLayout tilFullName, tilEmail, tilPassword, tilConfirmPassword;
-    private TextInputEditText etFullName, etEmail, etPassword, etConfirmPassword;
+    private TextInputLayout tilFullName, tilEmail, tilPhone, tilPassword, tilConfirmPassword;
+    private TextInputEditText etFullName, etEmail, etPhone, etPassword, etConfirmPassword;
     private Button btnRegister;
     private TextView tvBackToLogin;
 
     // Firebase
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        // 1. Initialize Firebase Auth
+        // 1. Initialize Firebase Auth & Firestore
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         // 2. Initialize UI Views
         initializeUI();
@@ -50,19 +53,34 @@ public class SignUpActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(v -> handleRegistration());
 
         tvBackToLogin.setOnClickListener(v -> {
-            // Return to the previous Login screen
-            finish();
+            // Navigate to Login Page
+            Intent intent = new Intent(SignUpActivity.this, LogInPage.class);
+            startActivity(intent);
+            // Optional: finish() if you don't want to keep SignUp in back stack
+            // finish(); 
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Check if user is already signed in; if so, navigate to Home
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            navigateToHome();
+        }
     }
 
     private void initializeUI() {
         tilFullName = findViewById(R.id.TIL_fullName);
         tilEmail = findViewById(R.id.TIL_signupEmail);
+        tilPhone = findViewById(R.id.TIL_signupPhone);
         tilPassword = findViewById(R.id.TIL_signupPassword);
         tilConfirmPassword = findViewById(R.id.TIL_confirmPassword);
 
         etFullName = findViewById(R.id.ET_fullName);
         etEmail = findViewById(R.id.ET_signupEmail);
+        etPhone = findViewById(R.id.ET_signupPhone);
         etPassword = findViewById(R.id.ET_signupPassword);
         etConfirmPassword = findViewById(R.id.ET_confirmPassword);
 
@@ -73,6 +91,7 @@ public class SignUpActivity extends AppCompatActivity {
     private void handleRegistration() {
         String fullName = etFullName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
@@ -87,6 +106,11 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         } else { tilEmail.setError(null); }
 
+        if (TextUtils.isEmpty(phone)) {
+            tilPhone.setError("Phone number is required");
+            return;
+        } else { tilPhone.setError(null); }
+
         if (password.length() < 6) {
             tilPassword.setError("Password must be at least 6 characters");
             return;
@@ -97,15 +121,17 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         } else { tilConfirmPassword.setError(null); }
 
-        // 2. Create User in Firebase
+        // 2. Create User in Firebase Auth
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         Log.d(TAG, "createUserWithEmail:success");
                         FirebaseUser user = mAuth.getCurrentUser();
 
-                        // 3. Update User Profile with Display Name
-                        updateUserProfile(user, fullName);
+                        // 3. Update User Profile and Save to Firestore
+                        if (user != null) {
+                            updateUserProfileAndSaveData(user, fullName, email, phone);
+                        }
                     } else {
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
                         String errorMessage = task.getException() != null ?
@@ -116,29 +142,47 @@ public class SignUpActivity extends AppCompatActivity {
                 });
     }
 
-    private void updateUserProfile(FirebaseUser user, String fullName) {
-        if (user != null) {
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setDisplayName(fullName)
-                    .build();
+    private void updateUserProfileAndSaveData(FirebaseUser user, String fullName, String email, String phone) {
+        // A. Update Auth Profile (Display Name)
+        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                .setDisplayName(fullName)
+                .build();
 
-            user.updateProfile(profileUpdates)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(SignUpActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+        user.updateProfile(profileUpdates)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // B. Save User Data to Firestore
+                        saveUserToFirestore(user.getUid(), fullName, email, phone);
+                    } else {
+                        // Even if profile update fails, try to save to Firestore
+                        saveUserToFirestore(user.getUid(), fullName, email, phone);
+                    }
+                });
+    }
 
-                            // 4. Navigate to Home/Main Activity and clear backstack
-                            Intent intent = new Intent(SignUpActivity.this, HomeActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            // Even if profile update fails, account is created, so navigate home
-                            Intent intent = new Intent(SignUpActivity.this, HomeActivity.class);
-                            startActivity(intent);
-                            finish();
-                        }
-                    });
-        }
+    private void saveUserToFirestore(String userId, String name, String email, String phone) {
+        // Create User object
+        User newUser = new User(name, email, phone);
+
+        // Save to "user" collection with UID as document ID
+        db.collection("user").document(userId)
+                .set(newUser)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "User data saved to Firestore");
+                    Toast.makeText(SignUpActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+                    navigateToHome();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error saving user data", e);
+                    Toast.makeText(SignUpActivity.this, "Account created, but failed to save details.", Toast.LENGTH_LONG).show();
+                    navigateToHome(); // Navigate anyway so user isn't stuck
+                });
+    }
+
+    private void navigateToHome() {
+        Intent intent = new Intent(SignUpActivity.this, HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

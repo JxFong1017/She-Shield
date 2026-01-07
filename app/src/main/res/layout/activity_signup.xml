@@ -77,6 +77,29 @@
             android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- NEW: Phone Number Field -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/TIL_signupPhone"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TIL_signupEmail">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ET_signupPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Phone Number (e.g. +60123456789)"
+            android:inputType="phone" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/TIL_signupPassword"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -90,7 +113,7 @@
         app:passwordToggleEnabled="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/TIL_signupEmail">
+        app:layout_constraintTop_toBottomOf="@+id/TIL_signupPhone">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ET_signupPassword"

@@ -31,16 +31,18 @@
         <activity
             android:name=".LogInPage"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
         
         <!-- Add the new SignUpActivity here -->
         <activity
             android:name=".SignUpActivity"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <!-- HomeActivity hosts the main fragments -->
         <activity
