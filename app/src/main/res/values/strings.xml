@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">She-Shield</string>
+    <string name="app_name">app_name</string>
     <string name="report_here">Report Here</string>
-
     <string name="default_web_client_id">628705667017-01uv7q09av0m0uli8r6l52qqq73o15rv.apps.googleusercontent.com</string>
 
+    <!-- String array for the Incident Type Spinner -->
     <string-array name="incident_types">
         <item>Select Incident Type</item>
         <item>Harassment</item>
@@ -16,6 +16,8 @@
         <item>Stalking</item>
         <item>Others</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="sos_deactivate_title">Deactivate SOS</string>
     <string name="sos_deactivate_message">Do you really want to deactivate the SOS?</string>
@@ -25,6 +27,4 @@
     <string name="sos_hold_to_activate">Hold for 3 seconds to activate</string>
     <string name="sos_active">SOS ACTIVE</string>
     <string name="sos_active_message">Emergency alerts sent to contacts!\nPress again to deactivate</string>
-
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

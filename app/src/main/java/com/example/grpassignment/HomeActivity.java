@@ -1,114 +1,157 @@
 package com.example.grpassignment;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private AppBarConfiguration appBarConfiguration;
+    private static final int PERMISSIONS_REQUEST_CODE = 1001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            // Not signed in, launch the Sign Up activity (Entry Point)
+            startActivity(new Intent(this, SignUpActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_home);
 
+        // Set status bar color to match toolbar
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(0xFF6B21A8);
+        }
+
         // 1. Find the toolbar from your activity's layout
-        Toolbar toolbar = findViewById(R.id.toolbar); // Make sure your Toolbar has this ID
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         // 2. Get the NavController from the NavHostFragment
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment); // Use the ID of your FragmentContainerView
+                .findFragmentById(R.id.nav_host_fragment);
         NavController navController = navHostFragment.getNavController();
-
-//        // 3. Find the DrawerLayout
-//        DrawerLayout drawerLayout = findViewById(R.id.DLMain);
-//
-//        // 4. Create AppBarConfiguration and link it with the DrawerLayout
-//        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph())
-//                .setOpenableLayout(drawerLayout)   // add this to handle drawer correctly
-//                .build();
 
         // 3. Connect the BottomNavigationView to the NavController
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav_view);
         NavigationUI.setupWithNavController(bottomNav, navController);
 
         // 4. Connect the Toolbar to the NavController
-        // This will automatically update the toolbar title and handle the Up button
         NavigationUI.setupActionBarWithNavController(this, navController);
-
-
-        // 4. Link the NavController to the ActionBar (the Toolbar)
-        //NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-
-
-
-//        // 1. Find the BottomNavigationView by its ID
-//        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav_view);
-//
-//        // 2. Connect the NavController to the BottomNavigationView
-//        NavigationUI.setupWithNavController(bottomNav, navController);
-
-
-        // NEW
-//        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-//                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-//        drawerLayout.addDrawerListener(toggle);
-//        toggle.syncState();
-//
-//        setupNavMenu(navController);
+        
+        // 5. Request necessary permissions on app start
+        requestNecessaryPermissions();
+    }
+    
+    private void requestNecessaryPermissions() {
+        List<String> permissionsNeeded = new ArrayList<>();
+        
+        // Location permission
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        
+        // Storage permission for older Android versions (for OSMDroid map caching)
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+        }
+        
+        // Request all needed permissions
+        if (!permissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(this, 
+                permissionsNeeded.toArray(new String[0]), 
+                PERMISSIONS_REQUEST_CODE);
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
+                                          @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == PERMISSIONS_REQUEST_CODE) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            
+            if (!allGranted) {
+                Toast.makeText(this, 
+                    "Some permissions were denied. Map features may not work properly.", 
+                    Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
-    //NEW
-//    private void setupNavMenu(NavController navController){
-//        NavigationView sideNav = findViewById(R.id.sideNav);
-//        NavigationUI.setupWithNavController(sideNav, navController);
-//    }
-//
-//
-//
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu_bottom, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        try {
-//            Navigation.findNavController(this, R.id.NHFMain).navigate(item.getItemId());
-//            return true;
-//        }
-//        catch (Exception ex)
-//        {
-//            return super.onOptionsItemSelected(item);
-//        }
-//    }
-    //NEW END
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_toolbar, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_logout) {
+            logout();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void logout() {
+        // Sign out from Firebase
+        FirebaseAuth.getInstance().signOut();
+        
+        // Navigate to login screen and clear the activity stack
+        Intent intent = new Intent(this, LogInPage.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
 
     // 5. Handle the "Up" button press
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = ((NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment)).getNavController();
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        NavController navController = navHostFragment.getNavController();
         return navController.navigateUp() || super.onSupportNavigateUp();
-    };
+    }
 }

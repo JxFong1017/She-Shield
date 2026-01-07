@@ -39,6 +39,7 @@ import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -70,8 +71,16 @@ public class ReportFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context ctx = requireContext().getApplicationContext();
+        
+        // Configure OSMDroid with proper cache paths
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        
+        // Set cache path to internal storage to avoid permission issues
+        File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
+        Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
+        File osmTileCache = new File(osmBasePath, "tiles");
+        Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         db = FirebaseFirestore.getInstance();

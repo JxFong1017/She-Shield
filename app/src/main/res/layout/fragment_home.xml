@@ -136,8 +136,6 @@
                     android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:clickable="true"
-                    android:foreground="?android:attr/selectableItemBackground"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="6dp">
 
@@ -153,17 +151,19 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:text="Safety Maps"
+                            android:text="Safety Map"
                             android:textColor="#4B2981"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
-                        <ImageView
-                            android:id="@+id/imageView19"
+                        <FrameLayout
+                            android:id="@+id/map_preview_container"
                             android:layout_width="145dp"
                             android:layout_height="194dp"
-                            android:contentDescription="Safety map icon"
-                            app:srcCompat="@drawable/gemini_generated_image_8vl9fy8vl9fy8vl9" />
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:foreground="?android:attr/selectableItemBackground"
+                            android:contentDescription="Safety map icon" />
 
                         <Button
                             android:id="@+id/button4"
@@ -255,8 +255,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Education Hub - Workshops"
-                                android:textColor="#000000"
+                                android:text="Education Hub &amp; Workshops"
+                                android.textColor="#000000"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
 
@@ -275,64 +275,9 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
 
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="100dp"
-                            android:layout_marginTop="5dp"
-                            android:clickable="true"
-                            app:cardCornerRadius="10dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:padding="8dp">
-
-                                <!-- Workshop Image -->
-                                <ImageView
-                                    android:id="@+id/imageView23"
-                                    android:layout_width="80dp"
-                                    android:layout_height="match_parent"
-                                    android:layout_marginEnd="8dp"
-                                    android:layout_weight="0.3"
-                                    android:scaleType="centerCrop"
-                                    android:contentDescription="Workshop image"
-                                    app:srcCompat="@drawable/istock_928165466_jpg" />
-
-                                <!-- Details and Button Container (Vertical) -->
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:gravity="center_vertical"
-                                    android:orientation="vertical">
-
-                                    <!-- Workshop Details -->
-                                    <TextView
-                                        android:id="@+id/textView9"
-                                        android:layout_width="172dp"
-                                        android:layout_height="wrap_content"
-                                        android:text="Self-Defense Workshop\n19 Nov 2025, Saturday (9a.m. - 11a.m.)"
-                                        android:textColor="@android:color/black"
-                                        android:textSize="14sp"
-                                        android:textStyle="bold" />
-
-                                    <!-- Join Button (Now placed below the TextView) -->
-                                    <Button
-                                        android:id="@+id/button12"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="35dp"
-                                        android:layout_marginTop="4dp"
-                                        android:minHeight="0dp"
-                                        android:paddingStart="16dp"
-                                        android:paddingEnd="16dp"
-                                        android:text="Join"
-                                        android:textSize="12sp" />
-
-                                </LinearLayout>
-                            </LinearLayout>
-
-                        </androidx.cardview.widget.CardView>
+                        <include
+                            android:id="@+id/latest_safety_resource"
+                            layout="@layout/item_safety_resource" />
 
                     </LinearLayout>
 

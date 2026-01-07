@@ -8,7 +8,7 @@
     android:padding="24dp">
     <!--
     This file implements the login screen for the "She-Shield" app,
-    featuring standard username/password fields and Google Sign-In.
+    featuring standard username/password fields.
     The primary theme color is set to #FEFCE8 (light cream).
     -->
 
@@ -109,50 +109,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/forgotpw" />
-
-    <!-- 5. Divider Line -->
-    <View
-        android:id="@+id/divider_line"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="32dp"
-        android:background="#CCCCCC"
-        app:layout_constraintEnd_toStartOf="@+id/TValternative_login"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BTlogin"
-        app:layout_constraintWidth_percent="0.35" />
-
-    <TextView
-        android:id="@+id/TValternative_login"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="OR"
-        android:textSize="14sp"
-        android:layout_marginHorizontal="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/divider_line"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/divider_line" />
-
-    <View
-        android:id="@+id/divider_line2"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="#CCCCCC"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/TValternative_login"
-        app:layout_constraintTop_toTopOf="@+id/divider_line"
-        app:layout_constraintWidth_percent="0.35" />
-
-    <!-- 6. Google Sign-In Button -->
-    <com.google.android.gms.common.SignInButton
-        android:id="@+id/BTGoogleLogin"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/TValternative_login" />
 
     <!-- 7. Signup Prompt -->
     <TextView

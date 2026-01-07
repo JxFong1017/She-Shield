@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
         android:name=".SheShieldApplication"
@@ -23,10 +33,10 @@
             android:exported="true">
 
         </activity>
-
-        <!-- The new HomeActivity that will host all our fragments -->
+        
+        <!-- Add the new SignUpActivity here -->
         <activity
-            android:name=".HomeActivity"
+            android:name=".SignUpActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,15 +44,37 @@
             </intent-filter>
         </activity>
 
-        <!-- This activity is still needed for posting a report -->
+        <!-- HomeActivity hosts the main fragments -->
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+
+        <!-- Other Activities -->
         <activity
             android:name=".PostReportActivity"
             android:exported="false" />
 
-        <!-- Activity for viewing report details -->
+        <activity
+            android:name=".MainActivity4"
+            android:exported="false" />
+
+        <activity
+            android:name=".RegistrationActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity4" />
+
         <activity
             android:name=".ReportDetailActivity"
             android:exported="false" />
+
+        <service android:name=".SosService"
+            android:foregroundServiceType="location" />
+
+        <service
+            android:name=".LocationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <meta-data
             android:name="preloaded_fonts"

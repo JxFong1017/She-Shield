@@ -18,8 +18,9 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginLeft="25dp"
+            android:layout_marginRight="25dp"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
             android:orientation="vertical"
@@ -32,47 +33,62 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/archivo_black"
                 android:text="Safety Zones Map"
+                android:textAlignment="textStart"
                 android:textSize="26dp" />
 
             <TextView
                 android:id="@+id/textView4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="3dp"
+                android:layout_marginTop="4dp"
                 android:fontFamily="sans-serif"
                 android:text="Verified safe locations near you"
+                android:textAlignment="textStart"
                 android:textSize="16dp" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/map_preview_parent_container"
                 android:layout_width="360dp"
                 android:layout_height="250dp"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
-                android:layout_marginRight="9dp"
                 android:clickable="false"
                 android:focusable="false"
                 android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="20dp">
 
                 <!-- Link to Map Fragment-->
+
+                <!-- Enhanced zoom icon with circular background -->
                 <FrameLayout
                     android:id="@+id/map_preview_container"
-                    android:layout_width="244dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:clickable="true"
                     android:focusable="true">
 
                     <!-- A clickable icon to indicate fullscreen -->
-                    <ImageView
-                        android:id="@+id/zoom_in_map"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="bottom|end"
-                        android:layout_margin="8dp"
-                        android:src="@android:drawable/gallery_thumb"
-                        app:tint="#100F0F" />
 
                 </FrameLayout>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="12dp"
+                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="6dp">
+
+                    <ImageView
+                        android:id="@+id/zoom_in_map"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/open_in_full"
+                        app:tint="#7C3AED" />
+
+                </androidx.cardview.widget.CardView>
 
             </androidx.cardview.widget.CardView>
 
@@ -296,12 +312,12 @@
             <!--            </androidx.cardview.widget.CardView>-->
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="0dp"
-                android:layout_marginRight="62dp"
-                android:layout_marginBottom="0dp"
+                android:layout_marginBottom="8dp"
                 android:text="Verified Safety Zones Near You"
+                android:textAlignment="textStart"
                 android:textColor="#1F2937"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -310,7 +326,11 @@
                 android:id="@+id/recyclerSafetyZones"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp" />
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="12dp" />
 
 
         </LinearLayout>

@@ -76,15 +76,11 @@ public class SafetyZoneAdapter extends RecyclerView.Adapter<SafetyZoneAdapter.Vi
         public void bind(final SafetyZone zone, final OnItemClickListener listener) {
             tvName.setText(zone.name);
 
-            if (userLocation != null && zone.geolocation != null) {
-                org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
-                        zone.geolocation.getLatitude(),
-                        zone.geolocation.getLongitude()
-                );
-                double distanceInMeters = userLocation.distanceToAsDouble(zonePoint);
-                String distanceText = distanceInMeters < 1000 ?
-                        String.format(Locale.US, "📍 %.0f m", distanceInMeters) :
-                        String.format(Locale.US, "📍 %.1f km", distanceInMeters / 1000.0);
+            // Use the pre-calculated distance from the zone object (road distance)
+            if (zone.distanceToUser > 0) {
+                String distanceText = zone.distanceToUser < 1000 ?
+                        String.format(Locale.US, "📍 %.0f m", zone.distanceToUser) :
+                        String.format(Locale.US, "📍 %.1f km", zone.distanceToUser / 1000.0);
                 tvDistance.setText(distanceText);
             } else {
                 tvDistance.setText("📍 Calculating…");

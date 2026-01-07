@@ -43,7 +43,7 @@
                 android:id="@+id/detail_description"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="25dp"
                 android:textSize="16sp"
                 tools:text="This is a detailed description of the safety zone, providing information about its services and mission." />
 
@@ -71,6 +71,22 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 tools:text="🟢 24/7 Support Available" />
+
+            <!-- Map Preview -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/detail_map_preview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="16dp"/>
+
+            <Button
+                android:id="@+id/button_view_on_map"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="View on Full Map"
+                android:textColor="?attr/colorPrimary"/>
 
         </LinearLayout>
     </LinearLayout>
