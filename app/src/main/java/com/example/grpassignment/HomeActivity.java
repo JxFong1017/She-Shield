@@ -35,8 +35,8 @@ public class HomeActivity extends AppCompatActivity {
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
-            // Not signed in, launch the Sign In activity
-            startActivity(new Intent(this, MainActivity3.class));
+            // Not signed in, launch the Sign Up activity (Entry Point)
+            startActivity(new Intent(this, SignUpActivity.class));
             finish();
             return;
         }

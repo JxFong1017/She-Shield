@@ -6,7 +6,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Patterns;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,7 +17,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -32,6 +39,7 @@ public class SignUpActivity extends AppCompatActivity {
     private TextInputEditText etFullName, etEmail, etPhone, etPassword, etConfirmPassword;
     private Button btnRegister;
     private TextView tvBackToLogin;
+    private ProgressBar progressBar;
 
     // Firebase
     private FirebaseAuth mAuth;
@@ -56,8 +64,6 @@ public class SignUpActivity extends AppCompatActivity {
             // Navigate to Login Page
             Intent intent = new Intent(SignUpActivity.this, LogInPage.class);
             startActivity(intent);
-            // Optional: finish() if you don't want to keep SignUp in back stack
-            // finish(); 
         });
     }
 
@@ -86,12 +92,13 @@ public class SignUpActivity extends AppCompatActivity {
 
         btnRegister = findViewById(R.id.BTRegister);
         tvBackToLogin = findViewById(R.id.TVBackToLogin);
+        progressBar = findViewById(R.id.progressBar);
     }
 
     private void handleRegistration() {
         String fullName = etFullName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
-        String phone = etPhone.getText().toString().trim();
+        String rawPhone = etPhone.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
@@ -104,12 +111,24 @@ public class SignUpActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(email)) {
             tilEmail.setError("Email is required");
             return;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            tilEmail.setError("Invalid email address");
+            return;
         } else { tilEmail.setError(null); }
 
-        if (TextUtils.isEmpty(phone)) {
+        if (TextUtils.isEmpty(rawPhone)) {
             tilPhone.setError("Phone number is required");
             return;
         } else { tilPhone.setError(null); }
+        
+        // Format Phone Number
+        String formattedPhone = formatPhoneNumber(rawPhone);
+        if (formattedPhone.length() < 10) {
+             tilPhone.setError("Invalid phone number format");
+             return;
+        } else {
+             tilPhone.setError(null);
+        }
 
         if (password.length() < 6) {
             tilPassword.setError("Password must be at least 6 characters");
@@ -121,6 +140,10 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         } else { tilConfirmPassword.setError(null); }
 
+        // Show Loading State
+        setLoading(true);
+        Log.d(TAG, "Attempting to register user: " + email);
+
         // 2. Create User in Firebase Auth
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
@@ -130,16 +153,74 @@ public class SignUpActivity extends AppCompatActivity {
 
                         // 3. Update User Profile and Save to Firestore
                         if (user != null) {
-                            updateUserProfileAndSaveData(user, fullName, email, phone);
+                            updateUserProfileAndSaveData(user, fullName, email, formattedPhone);
+                        } else {
+                            setLoading(false);
                         }
                     } else {
-                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        String errorMessage = task.getException() != null ?
-                                task.getException().getMessage() : "Unknown error";
-                        Toast.makeText(SignUpActivity.this, "Authentication failed: " +
-                                errorMessage, Toast.LENGTH_LONG).show();
+                        setLoading(false);
+                        Exception exception = task.getException();
+                        Log.w(TAG, "createUserWithEmail:failure", exception);
+                        
+                        String errorMessage = "Authentication failed.";
+                        
+                        if (exception != null) {
+                            try {
+                                throw exception;
+                            } catch (FirebaseAuthWeakPasswordException e) {
+                                tilPassword.setError("Password is too weak.");
+                                tilPassword.requestFocus();
+                                return;
+                            } catch (FirebaseAuthInvalidCredentialsException e) {
+                                tilEmail.setError("Invalid email format.");
+                                tilEmail.requestFocus();
+                                return;
+                            } catch (FirebaseAuthUserCollisionException e) {
+                                tilEmail.setError("Email already in use.");
+                                tilEmail.requestFocus();
+                                return;
+                            } catch (FirebaseNetworkException e) {
+                                errorMessage = "Network error. Check your connection.";
+                            } catch (Exception e) {
+                                errorMessage = "Error: " + e.getMessage();
+                            }
+                        }
+                        
+                        Toast.makeText(SignUpActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void setLoading(boolean isLoading) {
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            btnRegister.setEnabled(false);
+            btnRegister.setText("Creating Account...");
+        } else {
+            progressBar.setVisibility(View.GONE);
+            btnRegister.setEnabled(true);
+            btnRegister.setText("CREATE ACCOUNT");
+        }
+    }
+
+    private String formatPhoneNumber(String input) {
+        // Remove all spaces, dashes, and parentheses
+        String cleaned = input.replaceAll("[\\s\\-\\(\\)]", "");
+
+        // check if it is empty
+        if (cleaned.isEmpty()) return "";
+
+        // If it starts with '0', replace with Country Code
+        if (cleaned.startsWith("0")) {
+            return "+60" + cleaned.substring(1);
+        }
+
+        // add + if missing
+        if (!cleaned.startsWith("+")) {
+            return "+" + cleaned;
+        }
+
+        return cleaned;
     }
 
     private void updateUserProfileAndSaveData(FirebaseUser user, String fullName, String email, String phone) {
@@ -170,11 +251,13 @@ public class SignUpActivity extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> {
                     Log.d(TAG, "User data saved to Firestore");
                     Toast.makeText(SignUpActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+                    setLoading(false);
                     navigateToHome();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error saving user data", e);
                     Toast.makeText(SignUpActivity.this, "Account created, but failed to save details.", Toast.LENGTH_LONG).show();
+                    setLoading(false);
                     navigateToHome(); // Navigate anyway so user isn't stuck
                 });
     }
