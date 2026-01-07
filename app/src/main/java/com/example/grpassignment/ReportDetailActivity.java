@@ -14,6 +14,8 @@ import android.widget.VideoView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.bumptech.glide.Glide; // Import Glide
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -62,31 +64,25 @@ public class ReportDetailActivity extends AppCompatActivity {
             // --- Handle Location ---
             setLocationText(location, report.getLocation());
 
-            // --- Handle Media ---
+            // --- Handle Media with Glide ---
             String mediaUriString = report.getMediaUri();
-            if (mediaUriString != null) {
-                try {
-                    Uri mediaUri = Uri.parse(mediaUriString);
-                    String mimeType = getContentResolver().getType(mediaUri);
-
-                    noMediaText.setVisibility(View.GONE);
-
-                    if (mimeType != null && mimeType.startsWith("video/")) {
-                        imageView.setVisibility(View.GONE);
-                        videoView.setVisibility(View.VISIBLE);
-                        videoView.setVideoURI(mediaUri);
-                        MediaController mediaController = new MediaController(this);
-                        mediaController.setAnchorView(videoView);
-                        videoView.setMediaController(mediaController);
-                    } else {
-                        videoView.setVisibility(View.GONE);
-                        imageView.setVisibility(View.VISIBLE);
-                        imageView.setImageURI(mediaUri);
-                    }
-                } catch (Exception e) {
-                    Log.e("ReportDetailActivity", "Error loading media: " + e.getMessage());
-                    noMediaText.setText("Error loading media");
-                    noMediaText.setVisibility(View.VISIBLE);
+            if (mediaUriString != null && !mediaUriString.isEmpty()) {
+                noMediaText.setVisibility(View.GONE);
+                // A simple check for video files, you might need a more robust one
+                if (mediaUriString.contains(".mp4") || mediaUriString.contains(".mov") || mediaUriString.contains("video")) {
+                    imageView.setVisibility(View.GONE);
+                    videoView.setVisibility(View.VISIBLE);
+                    videoView.setVideoURI(Uri.parse(mediaUriString));
+                    MediaController mediaController = new MediaController(this);
+                    mediaController.setAnchorView(videoView);
+                    videoView.setMediaController(mediaController);
+                } else {
+                    videoView.setVisibility(View.GONE);
+                    imageView.setVisibility(View.VISIBLE);
+                    Glide.with(this)
+                         .load(mediaUriString)
+                         .placeholder(R.drawable.screenshot_2025_11_18_130845_removebg_preview)
+                         .into(imageView);
                 }
             } else {
                 noMediaText.setVisibility(View.VISIBLE);

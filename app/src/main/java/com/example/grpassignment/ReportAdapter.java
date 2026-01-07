@@ -13,6 +13,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide; // Import Glide
+
 import java.util.List;
 
 public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportViewHolder> {
@@ -42,11 +44,15 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportView
         String displayLoc = "Location: " + report.getLocation() + " | " + report.getTime();
         holder.txtLocationTime.setText(displayLoc);
 
-        // If media URI exists, try to load it
+        // Use Glide to load the image from the URL
         if (report.getMediaUri() != null) {
-            holder.imgReport.setImageURI(Uri.parse(report.getMediaUri()));
+            Glide.with(context)
+                 .load(report.getMediaUri())
+                 .placeholder(R.drawable.screenshot_2025_11_18_130845_removebg_preview) // Image while loading
+                 .error(R.drawable.screenshot_2025_11_18_130845_removebg_preview) // Image if loading fails
+                 .into(holder.imgReport);
         } else {
-            // Set a default image
+            // Set a default image if no media URI exists
             holder.imgReport.setImageResource(R.drawable.screenshot_2025_11_18_130845_removebg_preview); 
         }
 
@@ -55,7 +61,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportView
             Intent intent = new Intent(context, ReportDetailActivity.class);
             intent.putExtra("report", report); // Pass the report object
 
-            // CRITICAL FIX: Add this flag to grant URI permission to the new activity
+            // Grant permission to the new activity to read the URI
             if (report.getMediaUri() != null) {
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             }
