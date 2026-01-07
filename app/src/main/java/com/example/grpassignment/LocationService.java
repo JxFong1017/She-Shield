@@ -40,13 +40,22 @@ public class LocationService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private FirebaseFirestore db;
-    private String currentUserId = "U0001";
-    // private String currentUserId;
+    private String currentUserId;
 
     @Override
     public void onCreate() {
         super.onCreate();
         db = FirebaseFirestore.getInstance();
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            Log.e(TAG, "No authenticated user. Stopping LocationService.");
+            stopSelf();
+            return;
+        }
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         // Prepare the callback once

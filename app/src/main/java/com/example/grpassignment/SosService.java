@@ -23,6 +23,11 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +40,10 @@ public class SosService extends Service implements LocationListener {
     private static final String DELIVERED_SMS_ACTION = "DELIVERED_SMS_ACTION";
 
     private LocationManager locationManager;
-    private List<String> trustedContacts; // You need to populate this list
+    private List<String> trustedContacts;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+    private String currentUserId;
 
     private BroadcastReceiver sentSmsReceiver, deliveredSmsReceiver;
 
@@ -45,9 +53,19 @@ public class SosService extends Service implements LocationListener {
         Log.d(TAG, "onCreate");
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         trustedContacts = new ArrayList<>();
-        // TODO: Populate trustedContacts from your storage (SharedPreferences, DB, etc.)
-        // a placeholder
-        trustedContacts.add("601159806213");
+
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+            fetchTrustedContacts();
+        } else {
+            Log.e(TAG, "No authenticated user. Cannot send SOS messages.");
+            stopSelf();
+            return;
+        }
 
         sentSmsReceiver = new BroadcastReceiver() {
             @Override
@@ -90,6 +108,31 @@ public class SosService extends Service implements LocationListener {
         ContextCompat.registerReceiver(this, deliveredSmsReceiver, new IntentFilter(DELIVERED_SMS_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
+    private void fetchTrustedContacts() {
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return;
+        }
+        db.collection("user").document(currentUserId).collection("trusted_contacts")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        trustedContacts.clear();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String phone = document.getString("phone");
+                            if (phone != null && !phone.isEmpty()) {
+                                trustedContacts.add(phone);
+                            }
+                        }
+                        Log.d(TAG, "Fetched " + trustedContacts.size() + " trusted contacts for SOS.");
+                        if (trustedContacts.isEmpty()) {
+                            Log.w(TAG, "No trusted contacts found for the user.");
+                        }
+                    } else {
+                        Log.e(TAG, "Error fetching trusted contacts for SOS: ", task.getException());
+                    }
+                });
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
@@ -123,7 +166,11 @@ public class SosService extends Service implements LocationListener {
     @Override
     public void onLocationChanged(@NonNull Location location) {
         Log.d(TAG, "onLocationChanged: " + location);
-        sendSmsWithLocation(location);
+        if (trustedContacts != null && !trustedContacts.isEmpty()) {
+            sendSmsWithLocation(location);
+        } else {
+            Log.w(TAG, "No trusted contacts to send SMS to.");
+        }
     }
 
     private void sendSmsWithLocation(Location location) {
@@ -148,9 +195,15 @@ public class SosService extends Service implements LocationListener {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        locationManager.removeUpdates(this);
-        unregisterReceiver(sentSmsReceiver);
-        unregisterReceiver(deliveredSmsReceiver);
+        if (locationManager != null) {
+            locationManager.removeUpdates(this);
+        }
+        if (sentSmsReceiver != null) {
+            unregisterReceiver(sentSmsReceiver);
+        }
+        if (deliveredSmsReceiver != null) {
+            unregisterReceiver(deliveredSmsReceiver);
+        }
     }
 
     @Nullable

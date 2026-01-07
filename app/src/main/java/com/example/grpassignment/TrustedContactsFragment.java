@@ -55,7 +55,7 @@ public class TrustedContactsFragment extends Fragment {
     private static final String TAG = "TrustedContactsFragment";
     private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private String currentUserId = "U0001"; // Fallback default
+    private String currentUserId;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
@@ -127,14 +127,24 @@ public class TrustedContactsFragment extends Fragment {
         // Initialize Firebase Firestore
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        
-        // Get authenticated user or use fallback
+
+        btnAddContact = view.findViewById(R.id.btn_add_contact);
+        emptyStateLayout = view.findViewById(R.id.layout_empty_state); // Ensure this ID is in XML
+        recyclerView = view.findViewById(R.id.recycler_view_contacts);
+
+        // Get authenticated user
         if (auth.getCurrentUser() != null) {
             currentUserId = auth.getCurrentUser().getUid();
             Log.d(TAG, "Using authenticated user: " + currentUserId);
         } else {
-            Log.w(TAG, "No authenticated user, using fallback: " + currentUserId);
-            Toast.makeText(getContext(), "Using test user (not authenticated)", Toast.LENGTH_SHORT).show();
+            Log.w(TAG, "No authenticated user. Cannot function without a user.");
+            Toast.makeText(getContext(), "Not logged in. Cannot load contacts.", Toast.LENGTH_LONG).show();
+            // Disable UI elements that require a user
+            btnAddContact.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.GONE);
+            emptyStateLayout.setVisibility(View.VISIBLE);
+            // Or even better, navigate away or show a login prompt
+            return; // Stop further execution in onViewCreated
         }
 
         // Initialize Views
@@ -155,10 +165,6 @@ public class TrustedContactsFragment extends Fragment {
             mapOsm.getController().setZoom(16.0); // Set default close zoom
         }
 
-        btnAddContact = view.findViewById(R.id.btn_add_contact);
-        emptyStateLayout = view.findViewById(R.id.layout_empty_state); // Ensure this ID is in XML
-
-        recyclerView = view.findViewById(R.id.recycler_view_contacts);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         contactList = new ArrayList<>();
 
@@ -375,7 +381,7 @@ public class TrustedContactsFragment extends Fragment {
                     getContext(),
                     locationReceiver,
                     filter,
-                    ContextCompat.RECEIVER_NOT_EXPORTED // Requires import androidx.core.content.ContextCompat
+                    ContextCompat.RECEIVER_NOT_EXPORTED // Requires import androidx.core.c
             );
         }
     }

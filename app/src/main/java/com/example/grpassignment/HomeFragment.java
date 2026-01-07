@@ -67,7 +67,8 @@ public class HomeFragment extends Fragment {
     private FusedLocationProviderClient fusedLocationClient;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private List<String> trustedContacts; // You need to populate this list
+    private String currentUserId;
+    private List<String> trustedContacts; // Populated from Firestore
     private String currentAlertId;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -113,17 +114,23 @@ public class HomeFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
-        
-        // Ensure user is authenticated
-        ensureAuthentication();
-        
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+            fetchTrustedContacts(); // Fetch contacts for the logged-in user
+        } else {
+            Log.e(TAG, "No authenticated user. SOS and other features will be disabled.");
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Please log in to use all features.", Toast.LENGTH_LONG).show();
+            }
+        }
+
         if (getActivity() != null) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         }
 
         trustedContacts = new ArrayList<>();
-        // TODO: Populate trustedContacts from your storage (SharedPreferences, DB, etc.)
-        trustedContacts.add("601159806213"); // Placeholder
 
         sosButton = view.findViewById(R.id.sos_button);
         sosText = view.findViewById(R.id.sos_text);
@@ -230,6 +237,28 @@ public class HomeFragment extends Fragment {
         viewAllText.setOnClickListener(educationHubClickListener);
     }
 
+    private void fetchTrustedContacts() {
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return; // No user to fetch contacts for
+        }
+        db.collection("user").document(currentUserId).collection("trusted_contacts")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        trustedContacts.clear();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String phone = document.getString("phone");
+                            if (phone != null && !phone.isEmpty()) {
+                                trustedContacts.add(phone);
+                            }
+                        }
+                        Log.d(TAG, "Fetched " + trustedContacts.size() + " trusted contacts.");
+                    } else {
+                        Log.e(TAG, "Error fetching trusted contacts: ", task.getException());
+                    }
+                });
+    }
+
     private void checkAndRequestSosPermissions() {
         Context context = getContext();
         if (context == null) return;
@@ -300,13 +329,12 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Successfully retrieved location: " + location.getLatitude() + ", " + location.getLongitude());
                 FirebaseUser currentUser = mAuth.getCurrentUser();
                 if (currentUser == null) {
-                    Log.e(TAG, "User not signed in, cannot save alert. Attempting re-authentication...");
+                    Log.e(TAG, "User not signed in, cannot save alert.");
                     if (getContext() != null) {
-                        Toast.makeText(getContext(), "Authentication issue. Please restart the app and log in again.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Authentication issue. Please log in again.", Toast.LENGTH_LONG).show();
                     }
                     return;
                 }
-                Log.d(TAG, "User is signed in: " + currentUser.getUid() + " (Anonymous: " + currentUser.isAnonymous() + ")");
 
                 Map<String, Object> alert = new HashMap<>();
                 alert.put("initiatorId", currentUser.getUid());
@@ -352,9 +380,8 @@ public class HomeFragment extends Fragment {
         }
     }
 
-
     private void makePhoneCall() {
-        if (!trustedContacts.isEmpty()) {
+        if (trustedContacts != null && !trustedContacts.isEmpty()) {
             String phoneNumber = trustedContacts.get(0);
             Intent callIntent = new Intent(Intent.ACTION_CALL);
             callIntent.setData(Uri.parse("tel:" + phoneNumber));
@@ -362,6 +389,11 @@ public class HomeFragment extends Fragment {
                 startActivity(callIntent);
             } catch (SecurityException e) {
                 Log.e(TAG, "Error making phone call", e);
+            }
+        } else {
+            Log.w(TAG, "No trusted contacts to call for SOS.");
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "No trusted contacts found to call.", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -566,33 +598,5 @@ public class HomeFragment extends Fragment {
     private void stopBlinking() {
         isBlinking = false;
         handler.removeCallbacks(blinkRunnable);
-    }
-
-    /**
-     * Ensures the user is authenticated before using Firebase features.
-     * If not logged in with email/password, signs in anonymously as a fallback.
-     */
-    private void ensureAuthentication() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null) {
-            Log.d(TAG, "User not authenticated, signing in anonymously...");
-            mAuth.signInAnonymously()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "Anonymous sign-in successful");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null) {
-                                Log.d(TAG, "User ID: " + user.getUid());
-                            }
-                        } else {
-                            Log.e(TAG, "Anonymous sign-in failed", task.getException());
-                            if (getContext() != null) {
-                                Toast.makeText(getContext(), "Authentication failed. Some features may not work.", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-        } else {
-            Log.d(TAG, "User already authenticated: " + currentUser.getUid());
-        }
     }
 }
