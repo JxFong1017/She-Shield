@@ -68,7 +68,6 @@ public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private String currentUserId;
-    private List<String> trustedContacts; // Populated from Firestore
     private String currentAlertId;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -118,7 +117,6 @@ public class HomeFragment extends Fragment {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             currentUserId = currentUser.getUid();
-            fetchTrustedContacts(); // Fetch contacts for the logged-in user
         } else {
             Log.e(TAG, "No authenticated user. SOS and other features will be disabled.");
             if (getContext() != null) {
@@ -129,8 +127,6 @@ public class HomeFragment extends Fragment {
         if (getActivity() != null) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         }
-
-        trustedContacts = new ArrayList<>();
 
         sosButton = view.findViewById(R.id.sos_button);
         sosText = view.findViewById(R.id.sos_text);
@@ -236,28 +232,6 @@ public class HomeFragment extends Fragment {
         viewAllText.setOnClickListener(educationHubClickListener);
     }
 
-    private void fetchTrustedContacts() {
-        if (currentUserId == null || currentUserId.isEmpty()) {
-            return; // No user to fetch contacts for
-        }
-        db.collection("user").document(currentUserId).collection("trusted_contacts")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        trustedContacts.clear();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            String phone = document.getString("phone");
-                            if (phone != null && !phone.isEmpty()) {
-                                trustedContacts.add(phone);
-                            }
-                        }
-                        Log.d(TAG, "Fetched " + trustedContacts.size() + " trusted contacts.");
-                    } else {
-                        Log.e(TAG, "Error fetching trusted contacts: ", task.getException());
-                    }
-                });
-    }
-
     private void checkAndRequestSosPermissions() {
         Context context = getContext();
         if (context == null) return;
@@ -299,11 +273,8 @@ public class HomeFragment extends Fragment {
         startBlinking();
         saveAlertToFirestore();
 
-        // Only make the call if the app is in the foreground
-        if (isResumed()) {
-            makePhoneCall();
-        }
-
+        // The SosService will handle the phone call.
+        // We just need to start it.
         Intent intent = new Intent(activity, SosService.class);
         ContextCompat.startForegroundService(activity, intent);
     }
@@ -376,24 +347,6 @@ public class HomeFragment extends Fragment {
                     .update("status", "inactive")
                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Alert successfully deactivated"))
                     .addOnFailureListener(e -> Log.w(TAG, "Error deactivating alert", e));
-        }
-    }
-
-    private void makePhoneCall() {
-        if (trustedContacts != null && !trustedContacts.isEmpty()) {
-            String phoneNumber = trustedContacts.get(0);
-            Intent callIntent = new Intent(Intent.ACTION_CALL);
-            callIntent.setData(Uri.parse("tel:" + phoneNumber));
-            try {
-                startActivity(callIntent);
-            } catch (SecurityException e) {
-                Log.e(TAG, "Error making phone call", e);
-            }
-        } else {
-            Log.w(TAG, "No trusted contacts to call for SOS.");
-            if (getContext() != null) {
-                Toast.makeText(getContext(), "No trusted contacts found to call.", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
@@ -546,7 +499,7 @@ public class HomeFragment extends Fragment {
         ImageView safetyStatusIcon = view.findViewById(R.id.safety_status_icon);
 
         safetyStatusCard.setCardBackgroundColor(ContextCompat.getColor(context, R.color.safe_zone_bg));
-        safetyStatusTitle.setText("You're in a Safe Zone");
+        safetyStatusTitle.setText("You\'re in a Safe Zone");
         safetyStatusTitle.setTextColor(ContextCompat.getColor(context, R.color.safe_zone_text));
         safetyStatusSubtitle.setText("Within 500m of verified safe locations");
         safetyStatusSubtitle.setTextColor(ContextCompat.getColor(context, R.color.safe_zone_text));
@@ -564,7 +517,7 @@ public class HomeFragment extends Fragment {
         ImageView safetyStatusIcon = view.findViewById(R.id.safety_status_icon);
 
         safetyStatusCard.setCardBackgroundColor(ContextCompat.getColor(context, R.color.unsafe_zone_bg));
-        safetyStatusTitle.setText("Alert: You're in a Reported Zone");
+        safetyStatusTitle.setText("Alert: You\'re in a Reported Zone");
         safetyStatusTitle.setTextColor(ContextCompat.getColor(context, R.color.unsafe_zone_text));
         safetyStatusSubtitle.setText("A report has been filed within 500m of your location");
         safetyStatusSubtitle.setTextColor(ContextCompat.getColor(context, R.color.unsafe_zone_text));
