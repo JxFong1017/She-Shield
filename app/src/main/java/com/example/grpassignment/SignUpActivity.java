@@ -35,8 +35,8 @@ public class SignUpActivity extends AppCompatActivity {
     private static final String TAG = "SignUpActivity";
 
     // UI Elements
-    private TextInputLayout tilUsername, tilEmail, tilPhone, tilPassword, tilConfirmPassword;
-    private TextInputEditText etUsername, etEmail, etPhone, etPassword, etConfirmPassword;
+    private TextInputLayout tilFullName, tilEmail, tilPhone, tilPassword, tilConfirmPassword;
+    private TextInputEditText etFullName, etEmail, etPhone, etPassword, etConfirmPassword;
     private Button btnRegister;
     private TextView tvBackToLogin;
     private ProgressBar progressBar;
@@ -78,13 +78,13 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void initializeUI() {
-        tilUsername = findViewById(R.id.TIL_fullName); // ID remains TIL_fullName in XML
+        tilFullName = findViewById(R.id.TIL_fullName);
         tilEmail = findViewById(R.id.TIL_signupEmail);
         tilPhone = findViewById(R.id.TIL_signupPhone);
         tilPassword = findViewById(R.id.TIL_signupPassword);
         tilConfirmPassword = findViewById(R.id.TIL_confirmPassword);
 
-        etUsername = findViewById(R.id.ET_fullName); // ID remains ET_fullName in XML
+        etFullName = findViewById(R.id.ET_fullName);
         etEmail = findViewById(R.id.ET_signupEmail);
         etPhone = findViewById(R.id.ET_signupPhone);
         etPassword = findViewById(R.id.ET_signupPassword);
@@ -96,17 +96,17 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void handleRegistration() {
-        String username = etUsername.getText().toString().trim();
+        String fullName = etFullName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String rawPhone = etPhone.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
         // 1. Form Validation
-        if (TextUtils.isEmpty(username)) {
-            tilUsername.setError("Username is required");
+        if (TextUtils.isEmpty(fullName)) {
+            tilFullName.setError("Full name is required");
             return;
-        } else { tilUsername.setError(null); }
+        } else { tilFullName.setError(null); }
 
         if (TextUtils.isEmpty(email)) {
             tilEmail.setError("Email is required");
@@ -120,7 +120,7 @@ public class SignUpActivity extends AppCompatActivity {
             tilPhone.setError("Phone number is required");
             return;
         } else { tilPhone.setError(null); }
-        
+
         // Format Phone Number
         String formattedPhone = formatPhoneNumber(rawPhone);
         if (formattedPhone.length() < 10) {
@@ -153,7 +153,7 @@ public class SignUpActivity extends AppCompatActivity {
 
                         // 3. Update User Profile and Save to Firestore
                         if (user != null) {
-                            updateUserProfileAndSaveData(user, username, email, formattedPhone);
+                            updateUserProfileAndSaveData(user, fullName, email, formattedPhone);
                         } else {
                             setLoading(false);
                         }
@@ -161,9 +161,9 @@ public class SignUpActivity extends AppCompatActivity {
                         setLoading(false);
                         Exception exception = task.getException();
                         Log.w(TAG, "createUserWithEmail:failure", exception);
-                        
+
                         String errorMessage = "Authentication failed.";
-                        
+
                         if (exception != null) {
                             try {
                                 throw exception;
@@ -185,7 +185,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 errorMessage = "Error: " + e.getMessage();
                             }
                         }
-                        
+
                         Toast.makeText(SignUpActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                     }
                 });
@@ -223,20 +223,20 @@ public class SignUpActivity extends AppCompatActivity {
         return cleaned;
     }
 
-    private void updateUserProfileAndSaveData(FirebaseUser user, String username, String email, String phone) {
+    private void updateUserProfileAndSaveData(FirebaseUser user, String fullName, String email, String phone) {
         // A. Update Auth Profile (Display Name)
         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                .setDisplayName(username)
+                .setDisplayName(fullName)
                 .build();
 
         user.updateProfile(profileUpdates)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         // B. Save User Data to Firestore
-                        saveUserToFirestore(user.getUid(), username, email, phone);
+                        saveUserToFirestore(user.getUid(), fullName, email, phone);
                     } else {
                         // Even if profile update fails, try to save to Firestore
-                        saveUserToFirestore(user.getUid(), username, email, phone);
+                        saveUserToFirestore(user.getUid(), fullName, email, phone);
                     }
                 });
     }
