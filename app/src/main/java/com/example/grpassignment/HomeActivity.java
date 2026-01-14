@@ -139,6 +139,8 @@ public class HomeActivity extends AppCompatActivity {
         // Sign out from Firebase
         FirebaseAuth.getInstance().signOut();
         
+        Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show();
+
         // Navigate to login screen and clear the activity stack
         Intent intent = new Intent(this, LogInPage.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

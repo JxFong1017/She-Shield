@@ -86,12 +86,12 @@ public class LogInPage extends AppCompatActivity {
     }
 
     private void attemptStandardLogin() {
-        String email = etUsername.getText().toString().trim();
+        String usernameInput = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
         // Basic Validation
-        if (email.isEmpty()) {
-            tilUsername.setError("Email is required");
+        if (usernameInput.isEmpty()) {
+            tilUsername.setError("Username is required");
             return;
         } else {
             tilUsername.setError(null);
@@ -104,8 +104,8 @@ public class LogInPage extends AppCompatActivity {
             tilPassword.setError(null);
         }
 
-        // Firebase Sign-In with Email
-        mAuth.signInWithEmailAndPassword(email, password)
+        // Firebase Sign-In with Email (usernameInput is treated as email)
+        mAuth.signInWithEmailAndPassword(usernameInput, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         navigateToMainActivity(mAuth.getCurrentUser());

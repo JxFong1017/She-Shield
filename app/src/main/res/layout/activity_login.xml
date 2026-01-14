@@ -56,8 +56,8 @@
             android:id="@+id/ET_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username or Email"
-            android:inputType="textEmailAddress" />
+            android:hint="Username"
+            android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- 2. Password Input Field (Using TextInputLayout for Material Design) -->
