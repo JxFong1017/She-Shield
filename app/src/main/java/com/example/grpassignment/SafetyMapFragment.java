@@ -232,23 +232,16 @@ public class SafetyMapFragment extends Fragment implements SafetyZoneAdapter.OnI
     private void calculateAndSortDistances() {
         if (!isDataLoaded || !isLocationAvailable) return;
 
-        // First, calculate straight-line distances for quick display
+        // Set initial distance to 0 to show "Calculating..." while actual distance is being calculated
         for (SafetyZone zone : allSafetyZones) {
-            if (zone.geolocation != null) {
-                org.osmdroid.util.GeoPoint zonePoint = new org.osmdroid.util.GeoPoint(
-                        zone.geolocation.getLatitude(),
-                        zone.geolocation.getLongitude()
-                );
-                zone.distanceToUser = currentUserLocation.distanceToAsDouble(zonePoint);
-            }
+            zone.distanceToUser = 0;
         }
 
-        Collections.sort(allSafetyZones, Comparator.comparingDouble(z -> z.distanceToUser));
         updateMapPreviewMarkers();
         updateChipStyles(filterAll);
         filterAndDisplay(currentFilterType);
 
-        // Then calculate actual road distances in background
+        // Calculate actual road distances in background
         calculateRoadDistances();
     }
 

@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_nav_home_to_nav_resources"
             app:destination="@id/nav_resources" />
+        <action
+            android:id="@+id/action_nav_home_to_postReport"
+            app:destination="@id/postReportFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_map"
@@ -36,7 +39,14 @@
         android:id="@+id/nav_report"
         android:name="com.example.grpassignment.ReportFragment"
         android:label="Community Report"
-        tools:layout="@layout/fragment_report" />
+        tools:layout="@layout/fragment_report" >
+        <action
+            android:id="@+id/action_nav_report_to_postReport"
+            app:destination="@id/postReportFragment" />
+        <action
+            android:id="@+id/action_nav_report_to_reportDetail"
+            app:destination="@id/reportDetailFragment" />
+    </fragment>
     <fragment
         android:id="@+id/nav_resources"
         android:name="com.example.grpassignment.SafetyResourcesFragment"
@@ -45,6 +55,9 @@
         <action
             android:id="@+id/action_nav_resources_to_safetyResourceDetail"
             app:destination="@id/safetyResourceDetailFragment" />
+        <action
+            android:id="@+id/action_nav_resources_to_registration"
+            app:destination="@id/registrationFragment" />
     </fragment>
     <fragment
         android:id="@+id/nav_contacts"
@@ -81,5 +94,39 @@
         <argument
             android:name="safetyResource"
             app:argType="com.example.grpassignment.SafetyResource" />
+        <action
+            android:id="@+id/action_safetyResourceDetail_to_registration"
+            app:destination="@id/registrationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registrationFragment"
+        android:name="com.example.grpassignment.RegistrationFragment"
+        android:label="Workshop Registration"
+        tools:layout="@layout/fragment_registration" />
+
+    <fragment
+        android:id="@+id/postReportFragment"
+        android:name="com.example.grpassignment.PostReportFragment"
+        android:label="Report Incident"
+        tools:layout="@layout/fragment_post_report">
+        <argument
+            android:name="latitude"
+            android:defaultValue="0.0"
+            app:argType="float" />
+        <argument
+            android:name="longitude"
+            android:defaultValue="0.0"
+            app:argType="float" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/reportDetailFragment"
+        android:name="com.example.grpassignment.ReportDetailFragment"
+        android:label="Report Details"
+        tools:layout="@layout/fragment_report_detail">
+        <argument
+            android:name="report"
+            app:argType="com.example.grpassignment.Report" />
     </fragment>
 </navigation>

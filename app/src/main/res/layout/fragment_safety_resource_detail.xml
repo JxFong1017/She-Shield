@@ -29,18 +29,6 @@
                 android:layout_height="100dp"
                 android:layout_gravity="top"
                 android:background="@drawable/gradient_overlay_top" />
-
-            <!-- Back button -->
-            <ImageView
-                android:id="@+id/back_button"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_margin="16dp"
-                android:background="@drawable/circle_background_white"
-                android:elevation="4dp"
-                android:padding="8dp"
-                android:src="@drawable/ic_back_arrow"
-                app:tint="#333333" />
         </FrameLayout>
 
         <!-- Content Section -->

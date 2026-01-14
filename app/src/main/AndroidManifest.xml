@@ -49,23 +49,6 @@
             android:name=".HomeActivity"
             android:exported="false" />
 
-        <!-- Other Activities -->
-        <activity
-            android:name=".PostReportActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".MainActivity4"
-            android:exported="false" />
-
-        <activity
-            android:name=".RegistrationActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity4" />
-
-        <activity
-            android:name=".ReportDetailActivity"
-            android:exported="false" />
 
         <service android:name=".SosService"
             android:foregroundServiceType="location" />

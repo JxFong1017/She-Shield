@@ -8,9 +8,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -20,8 +22,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +44,10 @@ public class SosService extends Service implements LocationListener {
     private static final String DELIVERED_SMS_ACTION = "DELIVERED_SMS_ACTION";
 
     private LocationManager locationManager;
-    private List<String> trustedContacts; // You need to populate this list
+    private List<TrustedContact> trustedContacts;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+    private String currentUserId;
 
     private BroadcastReceiver sentSmsReceiver, deliveredSmsReceiver;
 
@@ -45,9 +57,18 @@ public class SosService extends Service implements LocationListener {
         Log.d(TAG, "onCreate");
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         trustedContacts = new ArrayList<>();
-        // TODO: Populate trustedContacts from your storage (SharedPreferences, DB, etc.)
-        // a placeholder
-        trustedContacts.add("601159806213");
+
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            Log.e(TAG, "No authenticated user. Cannot send SOS messages.");
+            stopSelf();
+            return;
+        }
 
         sentSmsReceiver = new BroadcastReceiver() {
             @Override
@@ -90,6 +111,56 @@ public class SosService extends Service implements LocationListener {
         ContextCompat.registerReceiver(this, deliveredSmsReceiver, new IntentFilter(DELIVERED_SMS_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
+    private void fetchTrustedContactsAndInitiateSos() {
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            return;
+        }
+        db.collection("user").document(currentUserId).collection("trusted_contacts")
+                .orderBy("rank", Query.Direction.ASCENDING)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        trustedContacts.clear();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            TrustedContact contact = document.toObject(TrustedContact.class);
+                            trustedContacts.add(contact);
+                        }
+                        Log.d(TAG, "Fetched " + trustedContacts.size() + " trusted contacts for SOS.");
+                        if (!trustedContacts.isEmpty()) {
+                            // Log the phone number before making the call
+                            Log.d(TAG, "Primary contact phone number: " + trustedContacts.get(0).getPhone());
+                            // Call the primary contact (rank 0)
+                            makePhoneCall(trustedContacts.get(0).getPhone());
+                            startLocationUpdates();
+                        } else {
+                            Log.w(TAG, "No trusted contacts found for the user.");
+                        }
+                    } else {
+                        Log.e(TAG, "Error fetching trusted contacts for SOS: ", task.getException());
+                    }
+                });
+    }
+
+    private void makePhoneCall(String phoneNumber) {
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:" + phoneNumber));
+            callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    startActivity(callIntent);
+                    Log.d(TAG, "Calling " + phoneNumber);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error making phone call", e);
+                }
+            } else {
+                Log.w(TAG, "CALL_PHONE permission not granted.");
+                // Optionally, inform the user they need to grant permission.
+            }
+        }
+    }
+
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
@@ -108,12 +179,16 @@ public class SosService extends Service implements LocationListener {
 
         startForeground(1, notification);
 
-        startLocationUpdates();
+        fetchTrustedContactsAndInitiateSos();
         return START_STICKY;
     }
 
     private void startLocationUpdates() {
         try {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Location permissions not granted.");
+                return;
+            }
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, this);
         } catch (SecurityException e) {
             Log.e(TAG, "Error requesting location updates", e);
@@ -123,7 +198,11 @@ public class SosService extends Service implements LocationListener {
     @Override
     public void onLocationChanged(@NonNull Location location) {
         Log.d(TAG, "onLocationChanged: " + location);
-        sendSmsWithLocation(location);
+        if (trustedContacts != null && !trustedContacts.isEmpty()) {
+            sendSmsWithLocation(location);
+        } else {
+            Log.w(TAG, "No trusted contacts to send SMS to.");
+        }
     }
 
     private void sendSmsWithLocation(Location location) {
@@ -134,12 +213,12 @@ public class SosService extends Service implements LocationListener {
         PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, new Intent(SENT_SMS_ACTION), pendingIntentFlags);
         PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0, new Intent(DELIVERED_SMS_ACTION), pendingIntentFlags);
 
-        for (String phoneNumber : trustedContacts) {
+        for (TrustedContact contact : trustedContacts) {
             try {
-                smsManager.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
-                Log.d(TAG, "SMS sent to " + phoneNumber);
+                smsManager.sendTextMessage(contact.getPhone(), null, message, sentPI, deliveredPI);
+                Log.d(TAG, "SMS sent to " + contact.getPhone());
             } catch (Exception e) {
-                Log.e(TAG, "Error sending SMS to " + phoneNumber, e);
+                Log.e(TAG, "Error sending SMS to " + contact.getPhone(), e);
             }
         }
     }
@@ -148,9 +227,15 @@ public class SosService extends Service implements LocationListener {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
-        locationManager.removeUpdates(this);
-        unregisterReceiver(sentSmsReceiver);
-        unregisterReceiver(deliveredSmsReceiver);
+        if (locationManager != null) {
+            locationManager.removeUpdates(this);
+        }
+        if (sentSmsReceiver != null) {
+            unregisterReceiver(sentSmsReceiver);
+        }
+        if (deliveredSmsReceiver != null) {
+            unregisterReceiver(deliveredSmsReceiver);
+        }
     }
 
     @Nullable

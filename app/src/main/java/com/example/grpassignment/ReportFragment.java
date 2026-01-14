@@ -21,6 +21,7 @@ import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -110,10 +111,10 @@ public class ReportFragment extends Fragment {
 
         btnConfirmReport.setOnClickListener(v -> {
             if (selectedLocationMarker != null) {
-                Intent intent = new Intent(getActivity(), PostReportActivity.class);
-                intent.putExtra("latitude", selectedLocationMarker.getPosition().getLatitude());
-                intent.putExtra("longitude", selectedLocationMarker.getPosition().getLongitude());
-                startActivity(intent);
+                Bundle args = new Bundle();
+                args.putFloat("latitude", (float)selectedLocationMarker.getPosition().getLatitude());
+                args.putFloat("longitude", (float)selectedLocationMarker.getPosition().getLongitude());
+                Navigation.findNavController(v).navigate(R.id.action_nav_report_to_postReport, args);
             }
         });
 

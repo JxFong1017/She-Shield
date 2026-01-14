@@ -5,15 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ReportDetailActivity">
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_report_detail"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="#6B21A8"
-        app:title="Report Details"
-        app:titleTextColor="@android:color/white" />
+    tools:context=".ReportDetailFragment">
 
     <ScrollView
         android:layout_width="match_parent"

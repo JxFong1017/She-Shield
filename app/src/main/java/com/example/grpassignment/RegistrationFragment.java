@@ -3,16 +3,20 @@ package com.example.grpassignment;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -23,14 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RegistrationActivity extends AppCompatActivity {
+public class RegistrationFragment extends Fragment {
 
-    private static final String TAG = "RegistrationActivity";
+    private static final String TAG = "RegistrationFragment";
 
     private Spinner workshopSpinner;
     private EditText nameInput, emailInput;
     private Button registerBtn;
-    private ImageView backBtn;
 
     private FirebaseFirestore db;
     private EmailJSHelper emailHelper;
@@ -39,10 +42,15 @@ public class RegistrationActivity extends AppCompatActivity {
     private List<String> workshopIdList;
     private Map<String, WorkshopData> workshopDataMap;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_registration);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_registration, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
         emailHelper = new EmailJSHelper();
@@ -51,17 +59,14 @@ public class RegistrationActivity extends AppCompatActivity {
         workshopIdList = new ArrayList<>();
         workshopDataMap = new HashMap<>();
 
-        workshopSpinner = findViewById(R.id.workshopSpinner);
-        nameInput = findViewById(R.id.userName);
-        emailInput = findViewById(R.id.userEmail);
-        registerBtn = findViewById(R.id.btnRegister);
-        backBtn = findViewById(R.id.backBtn);
-
-        backBtn.setOnClickListener(v -> finish());
+        workshopSpinner = view.findViewById(R.id.workshopSpinner);
+        nameInput = view.findViewById(R.id.userName);
+        emailInput = view.findViewById(R.id.userEmail);
+        registerBtn = view.findViewById(R.id.btnRegister);
 
         workshopDisplayList.add("Loading workshops...");
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
+                requireContext(),
                 android.R.layout.simple_spinner_item,
                 workshopDisplayList
         );
@@ -71,16 +76,7 @@ public class RegistrationActivity extends AppCompatActivity {
         loadWorkshopsFromFirestore(adapter);
 
         registerBtn.setOnClickListener(v -> handleRegistration());
-
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                // Return to the previous screen (Resources Fragment)
-                finish();
-            }
-        });
     }
-    // ----------------------------------------------------
 
     // ------------------ Load Workshops ------------------
     private void loadWorkshopsFromFirestore(ArrayAdapter<String> adapter) {
@@ -122,7 +118,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to load workshops", e);
-                    Toast.makeText(this, "Failed to load workshops", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Failed to load workshops", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -144,7 +140,7 @@ public class RegistrationActivity extends AppCompatActivity {
         }
 
         if (pos < 0 || pos >= workshopIdList.size()) {
-            Toast.makeText(this, "Select a workshop", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Select a workshop", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -182,7 +178,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         );
                     }
 
-                    new AlertDialog.Builder(this)
+                    new AlertDialog.Builder(requireContext())
                             .setTitle("Registration Successful")
                             .setMessage(
                                     "You have successfully registered for:\n\n" +
@@ -191,18 +187,19 @@ public class RegistrationActivity extends AppCompatActivity {
                                             email
                             )
                             .setCancelable(false)
-                            .setPositiveButton("OK", (d, w) -> finish())
+                            .setPositiveButton("OK", (d, w) -> 
+                                Navigation.findNavController(requireView()).navigateUp())
                             .show();
                 })
                 .addOnFailureListener(e -> {
                     registerBtn.setEnabled(true);
-                    Toast.makeText(this, "Registration failed. Try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Registration failed. Try again.", Toast.LENGTH_SHORT).show();
                 });
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         if (emailHelper != null) emailHelper.shutdown();
     }
 

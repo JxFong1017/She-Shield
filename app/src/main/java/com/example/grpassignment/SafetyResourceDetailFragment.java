@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 
@@ -62,7 +63,6 @@ public class SafetyResourceDetailFragment extends Fragment {
             }
 
             // Initialize views with null checks
-            ImageView backButton = view.findViewById(R.id.back_button);
             ImageView resourceImage = view.findViewById(R.id.resource_image);
             TextView detailTitle = view.findViewById(R.id.detail_title);
             TextView detailType = view.findViewById(R.id.detail_type);
@@ -80,22 +80,12 @@ public class SafetyResourceDetailFragment extends Fragment {
             Button actionButton = view.findViewById(R.id.action_button);
             
             // Log which views are null
-            if (backButton == null) Log.e(TAG, "backButton is null");
             if (resourceImage == null) Log.e(TAG, "resourceImage is null");
             if (detailTitle == null) Log.e(TAG, "detailTitle is null");
             if (detailType == null) Log.e(TAG, "detailType is null");
             if (detailDuration == null) Log.e(TAG, "detailDuration is null");
             if (detailDescription == null) Log.e(TAG, "detailDescription is null");
             if (actionButton == null) Log.e(TAG, "actionButton is null");
-
-            // Back button
-            if (backButton != null) {
-                backButton.setOnClickListener(v -> {
-                    if (getActivity() != null) {
-                        getActivity().onBackPressed();
-                    }
-                });
-            }
 
             // Load image with Glide
             if (resourceImage != null) {
@@ -137,17 +127,8 @@ public class SafetyResourceDetailFragment extends Fragment {
                     actionButton.setText("Register for Workshop");
                     actionButton.setOnClickListener(v -> {
                         try {
-                            // Open registration activity
-                            Intent intent = new Intent(getActivity(), RegistrationActivity.class);
-                            intent.putExtra("RESOURCE_TITLE", resource.getTitle());
-                            intent.putExtra("EVENT_DATE", resource.getEventDate());
-                            intent.putExtra("EVENT_TIME", resource.getEventTime());
-                            intent.putExtra("LOCATION", resource.getLocation());
-                            intent.putExtra("INSTRUCTOR", resource.getInstructor());
-                            intent.putExtra("CAPACITY", resource.getCapacity());
-                            intent.putExtra("DESCRIPTION", resource.getDescription());
-                            intent.putExtra("IMAGE_URL", resource.getImageUrl());
-                            startActivity(intent);
+                            // Navigate to registration fragment
+                            Navigation.findNavController(v).navigate(R.id.action_safetyResourceDetail_to_registration);
                         } catch (Exception e) {
                             Log.e(TAG, "Error opening registration: " + e.getMessage());
                             Toast.makeText(getContext(), "Error opening registration", Toast.LENGTH_SHORT).show();

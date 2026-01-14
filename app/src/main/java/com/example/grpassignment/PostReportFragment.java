@@ -6,25 +6,26 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -49,7 +50,7 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 
-public class PostReportActivity extends AppCompatActivity {
+public class PostReportFragment extends Fragment {
 
     // UI Components
     private Spinner spinnerType;
@@ -78,52 +79,58 @@ public class PostReportActivity extends AppCompatActivity {
     private FirebaseStorage storage;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        
         // OSM Droid configuration
-        Context ctx = getApplicationContext();
+        Context ctx = requireContext().getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
-        Configuration.getInstance().setUserAgentValue(getPackageName());
+        Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
         
         // Set cache path to internal storage to avoid permission issues
         File osmBasePath = new File(ctx.getFilesDir(), "osmdroid");
         Configuration.getInstance().setOsmdroidBasePath(osmBasePath);
         File osmTileCache = new File(osmBasePath, "tiles");
         Configuration.getInstance().setOsmdroidTileCache(osmTileCache);
+    }
 
-        setContentView(R.layout.activity_post_report);
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_post_report, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
 
         // --- Initialize Views ---
-        spinnerType = findViewById(R.id.spinner_incident_type);
-        editDate = findViewById(R.id.edit_date);
-        editTime = findViewById(R.id.edit_time);
-        editDescription = findViewById(R.id.edit_description);
-        btnDate = findViewById(R.id.icon_date_picker);
-        btnTime = findViewById(R.id.icon_time_picker);
-        btnSubmit = findViewById(R.id.btn_submit_report);
-        mapPreview = findViewById(R.id.map_preview);
-        btnUploadEvidence = findViewById(R.id.btn_upload_evidence);
-        imageUploadPreview = findViewById(R.id.image_upload_preview);
-        placeholderUploadLayout = findViewById(R.id.placeholder_upload_layout);
+        spinnerType = view.findViewById(R.id.spinner_incident_type);
+        editDate = view.findViewById(R.id.edit_date);
+        editTime = view.findViewById(R.id.edit_time);
+        editDescription = view.findViewById(R.id.edit_description);
+        btnDate = view.findViewById(R.id.icon_date_picker);
+        btnTime = view.findViewById(R.id.icon_time_picker);
+        btnSubmit = view.findViewById(R.id.btn_submit_report);
+        mapPreview = view.findViewById(R.id.map_preview);
+        btnUploadEvidence = view.findViewById(R.id.btn_upload_evidence);
+        imageUploadPreview = view.findViewById(R.id.image_upload_preview);
+        placeholderUploadLayout = view.findViewById(R.id.placeholder_upload_layout);
 
-        cardLow = findViewById(R.id.severity_low);
-        cardMedium = findViewById(R.id.severity_medium);
-        cardHigh = findViewById(R.id.severity_high);
+        cardLow = view.findViewById(R.id.severity_low);
+        cardMedium = view.findViewById(R.id.severity_medium);
+        cardHigh = view.findViewById(R.id.severity_high);
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
 
         // Set Current Date and Time
         setCurrentDateTime();
 
-        // Handle incoming location from Community Report
-        handleIncomingIntent();
-
-        // Back button in toolbar
-        findViewById(R.id.toolbar).setOnClickListener(v -> finish());
+        // Handle incoming location from arguments
+        handleArguments();
 
         // --- Initialize Map ---
         setupMap();
@@ -148,12 +155,13 @@ public class PostReportActivity extends AppCompatActivity {
         btnSubmit.setOnClickListener(v -> submitReportFlow());
     }
 
-    private void handleIncomingIntent() {
-        Intent intent = getIntent();
-        if (intent.hasExtra("latitude") && intent.hasExtra("longitude")) {
-            double lat = intent.getDoubleExtra("latitude", 0);
-            double lon = intent.getDoubleExtra("longitude", 0);
-            selectedLocation = new GeoPoint(lat, lon);
+    private void handleArguments() {
+        if (getArguments() != null) {
+            if (getArguments().containsKey("latitude") && getArguments().containsKey("longitude")) {
+                float lat = getArguments().getFloat("latitude", 0f);
+                float lon = getArguments().getFloat("longitude", 0f);
+                selectedLocation = new GeoPoint((double)lat, (double)lon);
+            }
         }
     }
 
@@ -226,7 +234,7 @@ public class PostReportActivity extends AppCompatActivity {
         mapPreview.getController().setZoom(15.0);
 
         // Add user location overlay
-        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(this), mapPreview);
+        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider(requireContext()), mapPreview);
         myLocationOverlay.enableMyLocation();
         myLocationOverlay.enableFollowLocation();
         mapPreview.getOverlays().add(myLocationOverlay);
@@ -247,7 +255,7 @@ public class PostReportActivity extends AppCompatActivity {
         MapEventsOverlay OverlayEvents = new MapEventsOverlay(mReceive);
         mapPreview.getOverlays().add(OverlayEvents);
 
-        // Check if we have a pre-selected location from Intent
+        // Check if we have a pre-selected location from arguments
         if (selectedLocation != null) {
             // Use the passed location
             mapPreview.getController().setCenter(selectedLocation);
@@ -259,16 +267,16 @@ public class PostReportActivity extends AppCompatActivity {
     }
 
     private void getCurrentLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
 
-        fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+        fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
             if (location != null) {
                 GeoPoint currentGeo = new GeoPoint(location.getLatitude(), location.getLongitude());
 
-                // Only center if we haven't already selected a location manually or via intent
+                // Only center if we haven't already selected a location manually or via arguments
                 if (selectedLocation == null) {
                     mapPreview.getController().setCenter(currentGeo);
                 }
@@ -315,7 +323,7 @@ public class PostReportActivity extends AppCompatActivity {
         int month = c.get(Calendar.MONTH);
         int day = c.get(Calendar.DAY_OF_MONTH);
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(),
                 (view, year1, monthOfYear, dayOfMonth) -> {
                     editDate.setText(dayOfMonth + "/" + (monthOfYear + 1) + "/" + year1);
                 }, year, month, day);
@@ -327,10 +335,10 @@ public class PostReportActivity extends AppCompatActivity {
         int hour = c.get(Calendar.HOUR_OF_DAY);
         int minute = c.get(Calendar.MINUTE);
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+        TimePickerDialog timePickerDialog = new TimePickerDialog(requireContext(),
                 (view, hourOfDay, minute1) -> {
                     String amPm = (hourOfDay >= 12) ? "PM" : "AM";
-                    int currentHour = (hourOfDay > 12) ? (hour - 12) : hourOfDay;
+                    int currentHour = (hourOfDay > 12) ? (hourOfDay - 12) : hourOfDay;
                     if (currentHour == 0) currentHour = 12;
 
                     String minuteString = (minute1 < 10) ? "0" + minute1 : String.valueOf(minute1);
@@ -350,18 +358,18 @@ public class PostReportActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PICK_MEDIA_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+        if (requestCode == PICK_MEDIA_REQUEST_CODE && resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
             selectedMediaUri = data.getData();
 
             // Take persistable URI permission
             final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
             try {
-                getContentResolver().takePersistableUriPermission(selectedMediaUri, takeFlags);
+                requireContext().getContentResolver().takePersistableUriPermission(selectedMediaUri, takeFlags);
             } catch (SecurityException e) {
-                Log.e("PostReportActivity", "Failed to take persistable permission for URI", e);
+                Log.e("PostReportFragment", "Failed to take persistable permission for URI", e);
             }
 
             // Show the preview and hide the placeholder
@@ -386,7 +394,7 @@ public class PostReportActivity extends AppCompatActivity {
         String filename = UUID.randomUUID().toString();
         StorageReference storageRef = storage.getReference().child("reports/" + filename);
 
-        Toast.makeText(this, "Uploading media...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), "Uploading media...", Toast.LENGTH_SHORT).show();
 
         storageRef.putFile(selectedMediaUri)
                 .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
@@ -394,7 +402,7 @@ public class PostReportActivity extends AppCompatActivity {
                     saveReportToFirestore(downloadUrl);
                 }))
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Media upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireContext(), "Media upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
@@ -405,12 +413,12 @@ public class PostReportActivity extends AppCompatActivity {
         String desc = editDescription.getText().toString();
 
         if (date.isEmpty() || time.isEmpty() || desc.isEmpty()) {
-            Toast.makeText(this, "Please fill in Date, Time, and Description", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Please fill in Date, Time, and Description", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (selectedLocation == null) {
-            Toast.makeText(this, "Please select a location on the map", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Please select a location on the map", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -436,11 +444,11 @@ public class PostReportActivity extends AppCompatActivity {
         db.collection("reports")
                 .add(report)
                 .addOnSuccessListener(documentReference -> {
-                    Toast.makeText(this, "Report submitted successfully!", Toast.LENGTH_SHORT).show();
-                    finish();
+                    Toast.makeText(requireContext(), "Report submitted successfully!", Toast.LENGTH_SHORT).show();
+                    Navigation.findNavController(requireView()).navigateUp();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Error submitting report: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error submitting report: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 

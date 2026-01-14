@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -187,15 +188,7 @@ public class SafetyResourcesFragment extends Fragment {
 
             if (registerWorkshopCard != null && getActivity() != null) {
                 registerWorkshopCard.setOnClickListener(v -> {
-                    Intent intent = new Intent(getActivity(), RegistrationActivity.class);
-                    intent.putExtra("RESOURCE_TITLE", workshop.getTitle());
-                    intent.putExtra("EVENT_DATE", workshop.getEventDate());
-                    intent.putExtra("EVENT_TIME", workshop.getEventTime());
-                    intent.putExtra("LOCATION", workshop.getLocation());
-                    intent.putExtra("INSTRUCTOR", workshop.getInstructor());
-                    intent.putExtra("CAPACITY", workshop.getCapacity());
-                    intent.putExtra("DESCRIPTION", workshop.getDescription());
-                    startActivity(intent);
+                    Navigation.findNavController(v).navigate(R.id.action_nav_resources_to_registration);
                 });
             }
         } catch (Exception e) {

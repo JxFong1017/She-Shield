@@ -158,8 +158,9 @@
 
                         <FrameLayout
                             android:id="@+id/map_preview_container"
-                            android:layout_width="145dp"
-                            android:layout_height="194dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
                             android:clickable="false"
                             android:focusable="false"
                             android:foreground="?android:attr/selectableItemBackground"

@@ -5,44 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PostReportActivity">
-
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="0dp"
-        android:layout_height="80dp"
-        android:background="#6B21A8"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Shield Icon -->
-    <ImageView
-        android:id="@+id/shield"
-        android:layout_width="37dp"
-        android:layout_height="51dp"
-        android:layout_marginStart="28dp"
-        app:layout_constraintBottom_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toStartOf="@id/toolbar"
-        app:layout_constraintTop_toTopOf="@id/toolbar"
-        app:srcCompat="@drawable/screenshot_2025_11_18_130845_removebg_preview" />
-
-    <!-- HerSpace Title -->
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:fontFamily="@font/archivo_black"
-        android:text="SheShield"
-        android:textColor="#FFFFFF"
-        android:textSize="26sp"
-        app:layout_constraintBottom_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toEndOf="@id/shield"
-        app:layout_constraintTop_toTopOf="@id/toolbar" />
+    tools:context=".PostReportFragment">
 
     <ScrollView
         android:id="@+id/scrollView2"
@@ -51,7 +14,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -487,15 +450,5 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <ImageView
-        android:id="@+id/imageView14"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/screenshot_2025_11_18_151951_removebg_preview" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

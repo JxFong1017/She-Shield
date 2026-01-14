@@ -67,7 +67,7 @@ public class HomeFragment extends Fragment {
     private FusedLocationProviderClient fusedLocationClient;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private List<String> trustedContacts; // You need to populate this list
+    private String currentUserId;
     private String currentAlertId;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -113,17 +113,20 @@ public class HomeFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
-        
-        // Ensure user is authenticated
-        ensureAuthentication();
-        
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+        } else {
+            Log.e(TAG, "No authenticated user. SOS and other features will be disabled.");
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Please log in to use all features.", Toast.LENGTH_LONG).show();
+            }
+        }
+
         if (getActivity() != null) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
         }
-
-        trustedContacts = new ArrayList<>();
-        // TODO: Populate trustedContacts from your storage (SharedPreferences, DB, etc.)
-        trustedContacts.add("601159806213"); // Placeholder
 
         sosButton = view.findViewById(R.id.sos_button);
         sosText = view.findViewById(R.id.sos_text);
@@ -157,8 +160,7 @@ public class HomeFragment extends Fragment {
         }
 
         sharePostButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), PostReportActivity.class);
-            startActivity(intent);
+            Navigation.findNavController(v).navigate(R.id.action_nav_home_to_postReport);
         });
 
         sosButton.setOnClickListener(v -> {
@@ -271,11 +273,8 @@ public class HomeFragment extends Fragment {
         startBlinking();
         saveAlertToFirestore();
 
-        // Only make the call if the app is in the foreground
-        if (isResumed()) {
-            makePhoneCall();
-        }
-
+        // The SosService will handle the phone call.
+        // We just need to start it.
         Intent intent = new Intent(activity, SosService.class);
         ContextCompat.startForegroundService(activity, intent);
     }
@@ -300,13 +299,12 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Successfully retrieved location: " + location.getLatitude() + ", " + location.getLongitude());
                 FirebaseUser currentUser = mAuth.getCurrentUser();
                 if (currentUser == null) {
-                    Log.e(TAG, "User not signed in, cannot save alert. Attempting re-authentication...");
+                    Log.e(TAG, "User not signed in, cannot save alert.");
                     if (getContext() != null) {
-                        Toast.makeText(getContext(), "Authentication issue. Please restart the app and log in again.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Authentication issue. Please log in again.", Toast.LENGTH_LONG).show();
                     }
                     return;
                 }
-                Log.d(TAG, "User is signed in: " + currentUser.getUid() + " (Anonymous: " + currentUser.isAnonymous() + ")");
 
                 Map<String, Object> alert = new HashMap<>();
                 alert.put("initiatorId", currentUser.getUid());
@@ -349,20 +347,6 @@ public class HomeFragment extends Fragment {
                     .update("status", "inactive")
                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Alert successfully deactivated"))
                     .addOnFailureListener(e -> Log.w(TAG, "Error deactivating alert", e));
-        }
-    }
-
-
-    private void makePhoneCall() {
-        if (!trustedContacts.isEmpty()) {
-            String phoneNumber = trustedContacts.get(0);
-            Intent callIntent = new Intent(Intent.ACTION_CALL);
-            callIntent.setData(Uri.parse("tel:" + phoneNumber));
-            try {
-                startActivity(callIntent);
-            } catch (SecurityException e) {
-                Log.e(TAG, "Error making phone call", e);
-            }
         }
     }
 
@@ -515,7 +499,7 @@ public class HomeFragment extends Fragment {
         ImageView safetyStatusIcon = view.findViewById(R.id.safety_status_icon);
 
         safetyStatusCard.setCardBackgroundColor(ContextCompat.getColor(context, R.color.safe_zone_bg));
-        safetyStatusTitle.setText("You're in a Safe Zone");
+        safetyStatusTitle.setText("You\'re in a Safe Zone");
         safetyStatusTitle.setTextColor(ContextCompat.getColor(context, R.color.safe_zone_text));
         safetyStatusSubtitle.setText("Within 500m of verified safe locations");
         safetyStatusSubtitle.setTextColor(ContextCompat.getColor(context, R.color.safe_zone_text));
@@ -533,7 +517,7 @@ public class HomeFragment extends Fragment {
         ImageView safetyStatusIcon = view.findViewById(R.id.safety_status_icon);
 
         safetyStatusCard.setCardBackgroundColor(ContextCompat.getColor(context, R.color.unsafe_zone_bg));
-        safetyStatusTitle.setText("Alert: You're in a Reported Zone");
+        safetyStatusTitle.setText("Alert: You\'re in a Reported Zone");
         safetyStatusTitle.setTextColor(ContextCompat.getColor(context, R.color.unsafe_zone_text));
         safetyStatusSubtitle.setText("A report has been filed within 500m of your location");
         safetyStatusSubtitle.setTextColor(ContextCompat.getColor(context, R.color.unsafe_zone_text));
@@ -566,33 +550,5 @@ public class HomeFragment extends Fragment {
     private void stopBlinking() {
         isBlinking = false;
         handler.removeCallbacks(blinkRunnable);
-    }
-
-    /**
-     * Ensures the user is authenticated before using Firebase features.
-     * If not logged in with email/password, signs in anonymously as a fallback.
-     */
-    private void ensureAuthentication() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null) {
-            Log.d(TAG, "User not authenticated, signing in anonymously...");
-            mAuth.signInAnonymously()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "Anonymous sign-in successful");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null) {
-                                Log.d(TAG, "User ID: " + user.getUid());
-                            }
-                        } else {
-                            Log.e(TAG, "Anonymous sign-in failed", task.getException());
-                            if (getContext() != null) {
-                                Toast.makeText(getContext(), "Authentication failed. Some features may not work.", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-        } else {
-            Log.d(TAG, "User already authenticated: " + currentUser.getUid());
-        }
     }
 }
